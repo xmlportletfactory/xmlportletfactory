@@ -1,0 +1,81 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/content" )
+#set( $createName = "/Language_fr.properties" )
+#
+#  Portlet language localization messages (by Juan Fernandez and Leo Pratlong)
+#
+#foreach($table in $applications)
+#set ($fields = $table.getFileDef().getFields().getFieldArray())
+
+#
+# Portlet ${table.getClassDef().getTitle()} Operations messages
+#
+${table.getFileDef().getName().toLowerCase()}-operate-successfully= Opération Réussie
+${table.getFileDef().getName().toLowerCase()}-add=Ajouter ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-added-successfully=${table.getClassDef().getTitle()} a été correctement ajouté.
+${table.getFileDef().getName().toLowerCase()}-deleted-successfully=${table.getClassDef().getTitle()} a été correctement supprimé.
+${table.getFileDef().getName().toLowerCase()}-error-deleting=Erreurs survenues lors de la suppression de ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-updated-successfully=${table.getClassDef().getTitle()} a été correctement mis à jour.
+${table.getFileDef().getName().toLowerCase()}-empty-results-message=Il n'y a pas ${table.getClassDef().getTitle()} à afficher.
+${table.getFileDef().getName().toLowerCase()}-help=Ce portlet permet aux utilisateurs d'ajouter, d'afficher, de modifier et de supprimer des ${table.getClassDef().getTitle()}.
+
+#
+# Portlet ${table.getClassDef().getTitle()} Field Operations messages
+#
+#foreach($field in $fields)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}=${field.getTitle()}
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required=${field.getTitle()} requis.
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="int" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="float" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="double" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="numeric")
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required-number=${field.getTitle()} doit être un chiffre.
+#end
+#if(${field.getRegexpType().xmlText().isEmpty()} == false)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-regexp-no-match=${field.getTitle()} contenu pas valide.
+#end
+#end
+
+#
+# Portlet ${table.getClassDef().getTitle()} Miscellaneous messages
+#
+action.ADD_${table.getClassDef().getName().toUpperCase()}=Ajouter ${table.getClassDef().getTitle()}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#end
+
+#
+# Preferences messages
+#
+rows-per-page=Lignes Par Page
+rows-per-page-required=Le champ Lignes Par Page est requis.
+rows-per-page-invalid=Le champ Lignes Par Page est invalide.
+date-format=Date Requis
+date-format-required=Le champ Format De Date est requis.
+date-format-error=Erreur de format de date
+datetime-format=Format De Datetime
+datetime-format-required=Le champ Format De Datetime est requis.
+datetime-format-error=Erreur de format de Datetime
+prefs-success=Les Préférences ont bien été enregistrées.
+
+#
+# Validator errors
+#
+email_error=L'email n'est pas valide.<br>(Exemple: user@domain.com)
+integer_regexp_error=Valeur Entière (Integer) pas valide.<br>(Exemple : 280)
+float_regexp_error=Valeur Flottante (Float) pas valide.<br>(Exemple : 280.8)
+error_number_format=Format numérique pas valide.
+url_error=Url pas valide<br>(Exemple: http://www.google.es)
+zipspain_error=Code postal pas valide.<br>(Exemple: 03801)
+nifspain_error=Nif pas valide.<br>(Exemple: 21667876Q)
+phonespain_error=Téléphone pas valide.<br>(Exemple: 99999999)
+zero_to_ten_error=Doit être un nombre entre 0 et 10.<br>(Exemple : 5)
+dependent-rows-exist-error-deleting=Vous ne pouvez pas supprimer la ligne principale. Veuillez supprimer les lignes secondaires auparavant.
+
+combo-select=Choisissez svp
+category.${commonData.getProjectName()}=${commonData.getProjectName()}
+boolean-true=Oui
+boolean-false=Non
+submit=Soumettre
+cancel=Annuler
+filter=Filtrer
+delete-field=Supprimer

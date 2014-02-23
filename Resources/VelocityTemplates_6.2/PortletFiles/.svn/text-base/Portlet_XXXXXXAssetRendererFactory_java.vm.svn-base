@@ -1,0 +1,168 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/asset" )
+#set( $createName = "/${classDef_name}AssetRendererFactory.java" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+#if ($asset)
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.asset;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.model.Portlet;
+import com.liferay.portal.security.permission.ActionKeys;
+import com.liferay.portal.security.permission.PermissionChecker;
+import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.util.PortletKeys;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.service.PortletLocalServiceUtil;
+import com.liferay.portlet.PortletURLFactoryUtil;
+import com.liferay.portlet.asset.model.AssetRenderer;
+import com.liferay.portlet.asset.model.BaseAssetRendererFactory;
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission.${classDef_name}EntryPermission;
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission.${classDef_name}Permission;
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
+
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
+
+import javax.servlet.http.HttpServletRequest;
+
+#if ($hasWorkflow)
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+#end
+
+/**
+ * @author ${author}
+ * @author Juan Gonzalez P.
+ */
+public class ${classDef_name}AssetRendererFactory extends BaseAssetRendererFactory {
+
+
+	public static final String CLASS_NAME = ${classDef_name}.class.getName();
+
+	public static final String TYPE = "${classDef_name}";
+
+	private long getCurrentPlid(LiferayPortletRequest request)
+			throws PortalException, SystemException {
+		ThemeDisplay themeDisplay = (ThemeDisplay) request
+				.getAttribute(WebKeys.THEME_DISPLAY);
+		return themeDisplay.getPlid();
+	}
+#if ($hasWorkflow)
+	@Override
+	public AssetRenderer getAssetRenderer(long groupId, String urlTitle)
+		throws PortalException, SystemException {
+
+		${classDef_name} entry =
+			${classDef_name}LocalServiceUtil.get${classDef_name}ByUrlTitle(
+				groupId, urlTitle, WorkflowConstants.STATUS_APPROVED);
+
+		return new ${classDef_name}AssetRenderer(entry);
+	}
+#else
+	
+	@Override
+	public AssetRenderer getAssetRenderer(long groupId, String urlTitle)
+		throws PortalException, SystemException {
+
+		${classDef_name} entry =
+			${classDef_name}LocalServiceUtil.get${classDef_name}ByUrlTitle(
+				groupId, urlTitle);
+
+		return new ${classDef_name}AssetRenderer(entry);
+	}
+#end
+	
+	public AssetRenderer getAssetRenderer(long classPK, int type)
+		throws PortalException, SystemException {
+
+		${classDef_name} entry = ${classDef_name}LocalServiceUtil.get${classDef_name}(classPK);
+
+		return new ${classDef_name}AssetRenderer(entry);
+	}
+
+	public String getClassName() {
+		return CLASS_NAME;
+	}
+
+	public String getType() {
+		return TYPE;
+	}
+	
+
+	@Override
+	public PortletURL getURLAdd(
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse)
+		throws PortalException, SystemException {
+
+		HttpServletRequest request =
+			liferayPortletRequest.getHttpServletRequest();
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		if (!${classDef_name}Permission.contains(
+				themeDisplay.getPermissionChecker(),
+				themeDisplay.getScopeGroupId(), 
+				"ADD_$application.getClassDef().getName().toUpperCase()")) {
+
+			return null;
+		}
+		
+		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
+					getControlPanelPlid(themeDisplay),
+					"${classDef_name}_WAR_${commonData.getProjectName()}portlet",
+					PortletRequest.RENDER_PHASE);
+
+		portletURL.setParameter("view", "edit${classDef_name}");
+		portletURL.setParameter("editType", "add");	
+		portletURL.setParameter("fromAsset","true");			
+
+
+		return portletURL;
+	}
+
+	@Override
+	public boolean hasPermission(
+			PermissionChecker permissionChecker, long classPK, String actionId)
+		throws Exception {
+
+		return ${classDef_name}EntryPermission.contains(
+			permissionChecker, classPK, actionId);
+	}
+
+	@Override
+	public boolean isLinkable() {
+		return _LINKABLE;
+	}
+
+	@Override
+	protected String getIconPath(ThemeDisplay themeDisplay) {
+		Portlet portlet = null; 
+		String path="";	
+		try{
+			portlet = PortletLocalServiceUtil.getPortletById(themeDisplay.getCompanyId(),
+				"${classDef_name}_WAR_${commonData.getProjectName()}portlet");
+		} catch (Exception e){					
+		}
+		
+			
+		if (portlet!=null){
+			path =portlet.getContextPath();
+		}		
+		return path + "/icons/icon.png";
+	}
+
+	private static final boolean _LINKABLE = true;
+}
+
+#else
+#*
+     As there are no asset services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

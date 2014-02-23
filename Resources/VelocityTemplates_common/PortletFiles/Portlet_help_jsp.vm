@@ -1,0 +1,7 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/JSPs/${fileDef_name}" )
+#set( $createName = "/help.jsp" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_jsp.txt")
+<%@include file="../init.jsp" %>
+
+<liferay-ui:message key="${classInstance}Help" />

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+	
+<!-- 
+	Esta es la definicion xml para la demostracion en el Symposio Liferay 
+	Madrid 2012. Summario: Realizar un aplicativo-intranet que de soporte a incidencias 
+	y consultas. 
+-->
+
+	<commonData>
+		<client>SymposioLiferay2012</client>
+		<projectName>Soporte</projectName>
+		<version>1</version>
+	</commonData>
+	<applications>
+	
+<!-- 
+	Incidencias - Cabecera: Es en esta tabla donde se hace el alta inicial 
+	de la incidencia. Establece los datos iniciales y es asignada a un "Supervisor" 
+	(via workflow) para su asignacion a un "Agente" que posteriormente realizara 
+	los trabajos necesarios para su resolucion. 
+-->
+
+		<application>
+			<classDef>
+				<name>Incidencias</name>
+				<title>Incidencias</title>
+				<asset>
+					<assetTitleFieldName>incidenciaTitulo</assetTitleFieldName>
+					<assetSummaryFieldName>incidenciaTitulo</assetSummaryFieldName>
+					<categories>true</categories>
+					<discussion>true</discussion>
+					<ratings>true</ratings>
+					<tags>true</tags>
+					<relatedAssets>true</relatedAssets>
+					<fullContentFieldName>incidenciaDescripcion</fullContentFieldName>
+				</asset>
+				<workflow>true</workflow>
+				<generateActivity>true</generateActivity>
+				<showInControlPanel>true</showInControlPanel>
+			</classDef>
+			<fileDef>
+				<name>incidencias</name>
+				<fields>
+					<field>
+						<name>incidenciaId</name>
+						<title>Incidencia</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+								<order>true</order>
+							</long>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>incidenciaTitulo</name>
+						<title>Titulo</title>
+						<type>
+							<varchar>
+								<length>50</length>
+								<filter>true</filter>
+								<order>true</order>
+							</varchar>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>incidenciaDescripcion</name>
+						<title>Descripcion</title>
+						<type>
+							<text></text>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>incidenciaAlta</name>
+						<title>Fecha Alta</title>
+						<type>
+							<datetime></datetime>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>incidenciaUrgencia</name>
+						<title>Urgencia</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+								<order>true</order>
+							</long>
+						</type>
+						<validation>
+							<className>Urgencias</className>
+							<fieldName>urgenciaId</fieldName>
+							<orderByField>urgenciaDescripcion</orderByField>
+						</validation>
+						<showFieldInView>true</showFieldInView>
+					</field>
+				</fields>
+			</fileDef>
+			<detailFiles>
+				<detailFile>
+					<connectionFieldName>incidenciaId</connectionFieldName>
+					<connectionTitle>Trabajos Realizados</connectionTitle>
+					<detailFileClassName>Trabajos</detailFileClassName>
+				</detailFile>
+			</detailFiles>
+		</application>
+
+<!-- 
+	Trabajos - Detalle de incidencias: Es en esta tabla donde se indican los trabajos 
+	realizados sobre cada incidencia. Son lineas introducidas por un "Agente" sobre 
+	una Incidencia (Cabecera) donde se van indicando los trabajos realizados, 
+	encaminados a su resolucion. 
+-->
+		<application>
+			<classDef>
+				<name>Trabajos</name>
+				<title>Trabajos</title>
+				<asset>
+					<assetTitleFieldName>trabajoTitulo</assetTitleFieldName>
+					<assetSummaryFieldName>trabajoTitulo</assetSummaryFieldName>
+					<categories>true</categories>
+					<discussion>true</discussion>
+					<ratings>true</ratings>
+					<tags>true</tags>
+					<relatedAssets>true</relatedAssets>
+					<fullContentFieldName>trabajoDescripcion</fullContentFieldName>
+				</asset>
+				<generateActivity>true</generateActivity>
+				<showInControlPanel>true</showInControlPanel>
+			</classDef>
+			<fileDef>
+				<name>trabajos</name>
+				<fields>
+					<field>
+						<name>trabajoId</name>
+						<title>Trabajo</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+								<order>true</order>
+							</long>
+						</type>
+						<showFieldInView>false</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>incidenciaId</name>
+						<title>Incidencia</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+								<order>true</order>
+							</long>
+						</type>
+						<showFieldInView>false</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>trabajoTitulo</name>
+						<title>Titulo</title>
+						<type>
+							<varchar>
+								<length>50</length>
+								<filter>true</filter>
+								<order>true</order>
+							</varchar>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>trabajoDescripcion</name>
+						<title>Descripcion</title>
+						<type>
+							<text></text>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>trabajoFechaInicio</name>
+						<title>Fecha Inicio</title>
+						<type>
+							<datetime></datetime>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>trabajoFechaFin</name>
+						<title>Fecha Inicio</title>
+						<type>
+							<datetime></datetime>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>false</required>
+					</field>
+					<field>
+						<name>trabajoResuelto</name>
+						<title>Resuelta Incidencia</title>
+						<type>
+							<boolean></boolean>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>false</required>
+					</field>
+				</fields>
+			</fileDef>
+		</application>
+
+
+<!-- 
+	Urgencia: Tabla con registros que clasifican la urgencia o importancia 
+	de las incidencias, que se enlaza a la tabla de cabecera de incidencias. 
+	Por ejemplo: Alta/Media/Baja 
+-->
+
+		<application>
+			<classDef>
+				<name>Urgencias</name>
+				<title>Urgencias</title>
+				<showInControlPanel>true</showInControlPanel>
+			</classDef>
+			<fileDef>
+				<name>urgencias</name>
+				<fields>
+					<field>
+						<name>urgenciaId</name>
+						<title>Urgencia</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+							</long>
+						</type>
+						<showFieldInView>false</showFieldInView>
+					</field>
+					<field>
+						<name>urgenciaDescripcion</name>
+						<title>Descripcion</title>
+						<type>
+							<varchar>
+								<filter>true</filter>
+								<length>40</length>
+								<order>true</order>
+								<unique>true</unique>
+							</varchar>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+				</fields>
+			</fileDef>
+		</application>
+	</applications>
+</definition>

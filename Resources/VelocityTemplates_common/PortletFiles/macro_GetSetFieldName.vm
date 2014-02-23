@@ -1,0 +1,7 @@
+#macro( GetSetFieldName $getSetFieldNameElement )
+#set ( $getSetFieldName_i = 0 )
+#foreach ( $getSetFieldName in $fieldNames )
+#set ( $getSetFieldName_i = $getSetFieldName_i + 1)
+#if ( $getSetFieldName_i == $getSetFieldNameElement)$getSetFieldName.substring(0,1).toUpperCase()$getSetFieldName.substring(1)#end
+#end
+#end

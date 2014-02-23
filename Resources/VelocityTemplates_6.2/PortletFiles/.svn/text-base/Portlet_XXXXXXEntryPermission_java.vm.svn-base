@@ -1,0 +1,79 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/service/permission" )
+#set( $createName = "/${classDef_name}EntryPermission.java" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.security.auth.PrincipalException;
+import com.liferay.portal.security.permission.PermissionChecker;
+
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
+
+#if ($hasWorkflow)
+import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
+#end
+
+/**
+ * @author Juan Gonzalez P. 
+ */
+public class ${classDef_name}EntryPermission {
+
+	public static void check(
+			PermissionChecker permissionChecker, ${classDef_name} entry,
+			String actionId)
+		throws PortalException {
+
+		if (!contains(permissionChecker, entry, actionId)) {
+			throw new PrincipalException();
+		}
+	}
+
+	public static void check(
+			PermissionChecker permissionChecker, long entryId, String actionId)
+		throws PortalException, SystemException {
+
+		if (!contains(permissionChecker, entryId, actionId)) {
+			throw new PrincipalException();
+		}
+	}
+
+	public static boolean contains(
+		PermissionChecker permissionChecker, ${classDef_name} entry,
+		String actionId) {		
+		
+#if ($hasWorkflow)
+		if (entry.isPending()) {
+			Boolean hasPermission = WorkflowPermissionUtil.hasPermission(
+				permissionChecker, entry.getGroupId(),
+				${classDef_name}.class.getName(), entry.getPrimaryKey(), actionId);
+
+			if (hasPermission != null) {
+				return hasPermission.booleanValue();
+			}
+		}
+#end
+
+		if (permissionChecker.hasOwnerPermission(
+				entry.getCompanyId(), ${classDef_name}.class.getName(),
+				entry.getPrimaryKey(), entry.getUserId(), actionId)) {
+
+			return true;
+		}
+
+		return permissionChecker.hasPermission(
+			entry.getGroupId(), ${classDef_name}.class.getName(), entry.getPrimaryKey(),
+			actionId);
+	}
+
+	public static boolean contains(
+			PermissionChecker permissionChecker, long entryId, String actionId)
+		throws PortalException, SystemException {
+
+		${classDef_name} entry = ${classDef_name}LocalServiceUtil.get${classDef_name}(entryId);
+
+		return contains(permissionChecker, entry, actionId);
+	}
+}

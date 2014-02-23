@@ -1,0 +1,7 @@
+#macro( FieldTitle $fieldTitleElement )
+#set ( $fieldTitle_i = 0 )
+#foreach ( $ftitle in $fieldTitles )
+#set ( $fieldTitle_i = $fieldTitle_i + 1)
+#if ( $fieldTitle_i == $fieldTitleElement)$ftitle#end
+#end
+#end

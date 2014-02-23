@@ -1,0 +1,12 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF" )
+#set( $createName = "/liferay-display.xml" )
+<?xml version="1.0"?>
+<!DOCTYPE display PUBLIC "-//Liferay//DTD Display 6.1.0//EN" "http://www.liferay.com/dtd/liferay-display_6_1_0.dtd">
+<display>
+	<category name="${commonData.getProjectName()}">
+#foreach($table in $applications)
+		<portlet id="${table.getClassDef().getName()}" />
+#end
+	</category>
+</display>

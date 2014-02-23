@@ -1,0 +1,59 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/META-INF" )
+#set( $createName = "/portlet-model-hints.xml" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_TranslateFieldType.vm")
+<?xml version="1.0" encoding="UTF-8"?>
+<model-hints>
+#foreach($table in $applications)
+<model name="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${table.getClassDef().getName()}">
+#set( $i = 0 )
+#set ($fields = $table.getFileDef().getFields().getFieldArray())
+#set ($hasImages = "false")
+#set ($hasDocuments = "false")
+#foreach($field in $fields)
+#set ( $i = $i + 1 )
+#if ( ($i == 1) )
+<field name="${field.getName()}" type="#TranslateFieldType(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})" />
+<field name="companyId" type="long" />
+<field name="groupId" type="long" />
+<field name="userId" type="long" />
+#else
+#set ($field_type=${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#if (${field_type}=="image")
+<field name="${field.getName()}"  type="long" />
+#set($hasImages = "true")
+#elseif(${field_type}=="document")
+<field name="${field.getName()}"  type="long" />
+#set($hasDocuments = "true")
+#elseif (${field_type}=="long")
+<field name="${field.getName()}"  type="long" >
+<hint name="display-width">60</hint>
+</field>
+#elseif (${field_type}=="int")
+<field name="${field.getName()}"  type="int" >
+<hint name="display-width">60</hint>
+</field>
+#elseif (${field_type}=="varchar")
+<field name="${field.getName()}"  type="String" >
+#set($varlenght = $field.getType().getVarchar().getLength() * 6 )
+<hint name="display-width">${varlenght}</hint>
+<hint name="max-length">$field.getType().getVarchar().getLength()</hint>
+</field>
+#elseif (${field_type}=="text")
+<field name="${field.getName()}"  type="String" >
+<hint name="max-length">4001</hint>
+</field>
+#else
+<field name="${field.getName()}"  type="#TranslateFieldType(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})" />
+#end
+#end
+#end
+#if ($hasImages==true)
+<field name="folderIGId"  type="long" />
+#end
+#if ($hasImages==true)
+<field name="folderDLId"  type="long" />
+#end
+</model>
+#end
+</model-hints>

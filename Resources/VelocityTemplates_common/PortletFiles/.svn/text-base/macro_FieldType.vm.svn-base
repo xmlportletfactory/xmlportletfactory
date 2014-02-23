@@ -1,0 +1,7 @@
+#macro( FieldType $element )
+#set ( $fieldType_i = 0 )
+#foreach ( $ft in $fieldTypes )
+#set ( $fieldType_i = $fieldType_i + 1)
+#if ( ($fieldType_i == $element) )$ft#end
+#end
+#end

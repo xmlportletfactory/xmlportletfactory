@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+    <commonData>
+        <client>Example01</client>
+        <projectName>@xmlportletfactory.name@</projectName>
+        <version>1</version>
+    </commonData>
+    <applications>
+    <!-- @xmlportletfactory.name@ Portlet Class and File definition  -->
+        <application>
+            <classDef>
+                <name>@xmlportletfactory.name@</name>
+                <title>@xmlportletfactory.display.name@</title>
+                <restrictBy>
+                        <userId>false</userId>
+                </restrictBy>
+            </classDef>
+            <fileDef>
+                <name>@xmlportletfactory.filename@</name>
+                <fields>
+                    <field>
+                        <name>@xmlportletfactory.filename@Id</name>
+                        <title>@xmlportletfactory.name@ Id</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>@xmlportletfactory.filename@Description</name>
+                        <title>@xmlportletfactory.name@ Description</title>
+                        <type>
+                            <varchar>
+                                <length>100</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                        <required>true</required>
+                    </field>
+                </fields>
+            </fileDef>
+        </application>
+    </applications>
+</definition>

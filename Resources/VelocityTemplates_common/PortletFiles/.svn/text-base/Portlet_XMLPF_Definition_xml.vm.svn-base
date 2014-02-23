@@ -1,0 +1,4 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src" )
+#set( $createName = "/XMLPF_Definition.xml" )
+${xml_definition}

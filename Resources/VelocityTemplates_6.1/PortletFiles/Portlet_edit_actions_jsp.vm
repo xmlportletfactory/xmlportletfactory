@@ -1,0 +1,108 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/JSPs/${fileDef_name}" )
+#set( $createName = "/edit_actions.jsp" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_jsp.txt")
+<%@include file="../init.jsp" %>
+
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name}"%>
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil"%>
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission.${classDef_name}EntryPermission"%>
+<%@ page import="com.liferay.portal.kernel.util.HttpUtil"%>
+<%@ page import="com.liferay.portal.kernel.language.UnicodeLanguageUtil"%>
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#foreach($detailapplication in $applications)
+#if (${detailapplication.getClassDef().getName()} == ${detailfile.getDetailFileClassName()})
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${detailapplication.getClassDef().getName()}LocalServiceUtil" %>
+#end
+#end
+#end
+
+<%
+ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
+${classDef_name} ${classInstance} = (${classDef_name})row.getObject();
+
+long groupId = ${classInstance}.getGroupId();
+String name = ${classDef_name}.class.getName();
+String primKey = String.valueOf(${classInstance}.getPrimaryKey());
+boolean noDetailsRows = true;
+#set ($firstDetail="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstDetail}=="true")
+String ${detailfile.getConnectionFieldName()}Str = ${classInstance}.get${detailfile.getConnectionFieldName().substring(0,1).toUpperCase()}${detailfile.getConnectionFieldName().substring(1)}() + "";
+#set($firstDetail="false")
+#end
+
+#foreach($detailapplication in $applications)
+#if (${detailapplication.getClassDef().getName()} == ${detailfile.getDetailFileClassName()})
+	if(!${detailapplication.getClassDef().getName()}LocalServiceUtil.findAllIn${detailfile.getConnectionFieldName()}(${classInstance}.getPrimaryKey()).isEmpty()) {
+		noDetailsRows = false;
+	}
+#end
+#end
+
+#end
+
+%>
+<liferay-ui:icon-menu cssClass="">
+#set ($browsemode="true")
+#if(${application.getClassDef().isSetMode()}=="true")
+#set ($browsemode=${application.getClassDef().getMode().getBrowse()})
+#end
+#if (${browsemode}=="true")
+
+	<c:if test="<%= ${classDef_name}EntryPermission.contains(permissionChecker, ${classInstance}, ActionKeys.UPDATE) %>">
+		<portlet:actionURL name="edit${application.getClassDef().getName()}" var="edit${application.getClassDef().getName()}URL">
+			<portlet:param name="resourcePrimKey" value="<%=primKey %>" />
+#set ($firstDetail="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstDetail}=="true")
+			<portlet:param name="${detailfile.getConnectionFieldName()}" value="<%= ${detailfile.getConnectionFieldName()}Str %>" />
+#set($firstDetail="false")
+#end
+#end
+		</portlet:actionURL>
+
+		<liferay-ui:icon image="edit" url="<%=edit${application.getClassDef().getName()}URL.toString() %>" />
+	</c:if>
+#end
+#set ($deletemode="true")
+#if(${application.getClassDef().isSetMode()}=="true")
+#set ($deletemode=${application.getClassDef().getMode().getDelete()})
+#end
+#if (${deletemode}=="true")
+
+	<c:if test="<%= ${classDef_name}EntryPermission.contains (permissionChecker, ${classInstance}, ActionKeys.DELETE) %>">
+		<portlet:actionURL name="delete${application.getClassDef().getName()}" var="delete${application.getClassDef().getName()}URL">
+			<portlet:param name="resourcePrimKey" value="<%= primKey %>" />
+		</portlet:actionURL>
+		<c:choose>
+			<c:when test="<%= !noDetailsRows %>">
+			<%
+				String deleteUrl = "javascript:if(confirm('" + UnicodeLanguageUtil.get(pageContext, "confirm-delete") + "')){submitForm(document.hrefFm, '" + HttpUtil.encodeURL(delete${application.getClassDef().getName()}URL) + "');}";
+			%>
+			<liferay-ui:icon image="delete" url="<%=deleteUrl %>" />
+			</c:when>
+			<c:otherwise>
+    		<liferay-ui:icon image="delete" url="<%=delete${application.getClassDef().getName()}URL.toString() %>" />
+
+            </c:otherwise>
+        </c:choose>
+	</c:if>
+
+#end
+
+
+<c:if test="<%= ${classDef_name}EntryPermission.contains(permissionChecker, ${classInstance}, ActionKeys.PERMISSIONS) %>">
+		<liferay-security:permissionsURL
+			modelResource="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name}"
+			modelResourceDescription="${classDef_name}"
+			resourcePrimKey="<%= String.valueOf(primKey) %>"
+			var="permissionsEntryURL"
+		/>
+
+		<liferay-ui:icon
+			image="permissions"
+			url="<%= permissionsEntryURL %>"
+		/>
+</c:if>
+</liferay-ui:icon-menu>

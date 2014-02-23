@@ -1,0 +1,26 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/JSPs/${fileDef_name}" )
+#set( $createName = "/asset_${fileDef_name}_full_content.jsp" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_jsp.txt")
+#if ($asset)
+<%@include file="../init.jsp" %>
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name}" %>
+
+<%@ page import="com.liferay.portal.kernel.util.StringPool" %>
+<%@ page import="com.liferay.portal.kernel.util.HttpUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.HtmlUtil" %>
+
+
+<jsp:useBean id="${classInstance}" type="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name}" scope="request"/>
+
+<portlet:defineObjects />
+
+<%= ${classInstance}.get${assetFullContentField.substring(0,1).toUpperCase()}${assetFullContentField.substring(1)}() %>
+
+#else
+#*
+     As there are no asset services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

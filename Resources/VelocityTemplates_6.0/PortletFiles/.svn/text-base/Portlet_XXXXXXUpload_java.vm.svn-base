@@ -1,0 +1,386 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}" )
+#set( $createName = "/${classDef_name}Upload.java" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()};
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.portlet.ActionRequest;
+import org.apache.commons.fileupload.FileItem;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.model.User;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.ServiceContextFactory;
+import com.liferay.portal.service.UserLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.model.DLFileEntry;
+import com.liferay.portlet.documentlibrary.model.DLFolder;
+import com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil;
+import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
+import com.liferay.portlet.imagegallery.model.IGFolder;
+import com.liferay.portlet.imagegallery.model.IGImage;
+import com.liferay.portlet.imagegallery.service.IGFolderLocalServiceUtil;
+import com.liferay.portlet.imagegallery.service.IGImageLocalServiceUtil;
+
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+
+/**
+ * Upload implementation class ${classDef_name}
+ */
+public class ${classDef_name}Upload {
+
+	public static String HIDDEN = "HIDDEN";
+	public static String SEPARATOR = "_";
+
+	public static String IMAGEGALLERY_REQUESTFOLDER = HIDDEN+SEPARATOR+"folderIGId";
+	public static String DOCUMENTLIBRARY_REQUESTFOLDER = HIDDEN+SEPARATOR+"folderDLId";
+
+	public static String IMAGEFILE = "IMAGEFILE";
+	public static String IMAGEGALLERY_MAINFOLDER = "PortletUploads";
+	public static String IMAGEGALLERY_PORTLETFOLDER = "${fileDef_name}";
+	public static String IMAGEGALLERY_MAINFOLDER_DESCRIPTION = "Portlet Image Uploads";
+	public static String IMAGEGALLERY_PORTLETFOLDER_DESCRIPTION = "";
+	public static String IMAGE_DELETE = "DELETEIMAGE";
+
+	public static String DOCUMENTFILE = "DOCUMENTFILE";
+	public static String DOCUMENTLIBRARY_MAINFOLDER = "PortletUploads";
+	public static String DOCUMENTLIBRARY_PORTLETFOLDER = "${fileDef_name}";
+	public static String DOCUMENTLIBRARY_MAINFOLDER_DESCRIPTION = "Portlet Document Uploads";
+	public static String DOCUMENTLIBRARY_PORTLETFOLDER_DESCRIPTION = "";
+	public static String DOCUMENT_DELETE = "DELETEDOCUMENT";
+
+	private Long igFolderId = 0L;
+	private Long dlFolderId = 0L;
+
+	private List<FileItem> files = null;
+	private HashMap hiddens = null;
+	private HashMap deleteds = null;
+
+	public ${classDef_name}Upload() {
+		init();
+	}
+
+	private void init(){
+		files = new ArrayList<FileItem>();
+		hiddens = new HashMap();
+		deleteds = new HashMap();
+		igFolderId = 0L;
+		dlFolderId = 0L;
+	}
+
+	public void add(FileItem item) {
+		if(files==null) files = new ArrayList<FileItem>();
+		files.add(item);
+	}
+
+	public void addHidden(String formField, Long value){
+		if(hiddens==null) hiddens = new HashMap();
+		//Check if Hidden folders
+		if (formField.equalsIgnoreCase(IMAGEGALLERY_REQUESTFOLDER)){
+			if((value!=null)&& (value!=0L)) igFolderId = value;
+		} else if (formField.equalsIgnoreCase(DOCUMENTLIBRARY_REQUESTFOLDER)){
+			if((value!=null)&& (value!=0L)) dlFolderId = value;
+		} else {
+			hiddens.put(formField, value);
+		}
+	}
+
+	public void addDeleted(String formField) {
+		if(deleteds==null) deleteds = new HashMap();
+		deleteds.put(formField,new Boolean("true"));
+	}
+
+#set ($hasImages="false")
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($hasImages="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#end
+	public ${classDef_name} uploadFiles(ActionRequest request,${classDef_name} ${classInstance}) throws PortalException, SystemException, IOException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException{
+
+        Long userId = Long.parseLong(request.getRemoteUser());
+    	User user = UserLocalServiceUtil.getUserById(userId);
+    	Long groupId = UserLocalServiceUtil.getUser(userId).getGroup().getGroupId();
+
+		ServiceContext igServiceContext = null;
+		ServiceContext dlServiceContext = null;
+
+		for(FileItem item : files) {
+			String formField = item.getFieldName();
+			String strType = formField.substring(formField.lastIndexOf(SEPARATOR)+1);
+			if(strType.equalsIgnoreCase(IMAGEFILE)){
+				String portletName = "_"+request.getAttribute(WebKeys.PORTLET_ID)+"_";
+				formField = extractPrefixAndSufix(portletName,SEPARATOR+IMAGEFILE,formField);
+				if(deleteds.get(formField)!=null) {
+					if(hiddens!=null) {
+						Long prevImage = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+						if((prevImage!=null)&&(prevImage!=0L)) {
+							IGImageLocalServiceUtil.deleteIGImage(prevImage);
+						}
+					}
+				} else if(!item.getName().equals("")){
+					if(igServiceContext == null){
+						igServiceContext = createServiceContext(request,IGImage.class.getName(),userId,groupId);
+					}
+					if(igFolderId==0L){
+						createIGFolders(request,userId,groupId,igServiceContext);
+					}
+					IGImage igImage = IGImageLocalServiceUtil.addImage(userId, groupId, igFolderId, item.getName(), item.getName() ,item.getName() ,  item.getInputStream(), "jpg", igServiceContext);
+					callSetMethod(formField,${classInstance},igImage.getImageId());
+					//Check possible previous values
+					if(hiddens!=null){
+						Long prevImage = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+						if((prevImage!=null) && (prevImage!=0L)){
+							//Delete previous image
+							IGImageLocalServiceUtil.deleteIGImage(prevImage);
+						}
+					}
+				} else {
+					//See hidden value, possible edit
+					if(hiddens!=null){
+						Long prevImage = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+						if((prevImage!=null)&&(prevImage!=0L)){
+							callSetMethod(formField,${classInstance},(Long)hiddens.get(HIDDEN+SEPARATOR+formField));
+						}
+					}
+
+				}
+			}else if(strType.equalsIgnoreCase(DOCUMENTFILE)) {
+				String portletName = "_"+request.getAttribute(WebKeys.PORTLET_ID)+"_";
+				formField = extractPrefixAndSufix(portletName,SEPARATOR+DOCUMENTFILE,formField);
+				if(deleteds.get(formField)!=null){
+					Long prevDocument = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+					if((prevDocument!=null)&&(prevDocument!=0L)) {
+						DLFileEntryLocalServiceUtil.deleteDLFileEntry(prevDocument);
+					}
+				} else if(!item.getName().equals("")){
+					if(dlServiceContext == null){
+						dlServiceContext = createServiceContext(request,DLFileEntry.class.getName(),userId,groupId);
+					}
+					if(dlFolderId==0L) {
+						createDLFolders(request,userId,groupId,dlServiceContext);
+					}
+					DLFileEntry dlDocument = DLFileEntryLocalServiceUtil.addFileEntry(userId, groupId, dlFolderId, item.getName(), item.getName(), item.getName(), "", "", item.getInputStream(),item.getSize(),dlServiceContext);
+					callSetMethod(formField,${classInstance},dlDocument.getFileEntryId());
+					//Check possible previous values
+					if(hiddens!=null){
+						Long prevDocument = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+						if((prevDocument!=null)&&(prevDocument!=0L)){
+							//Delete previous document
+							DLFileEntryLocalServiceUtil.deleteDLFileEntry(prevDocument);
+						}
+					}
+				} else {
+					//See hidden value, possible edit
+					if(hiddens!=null){
+						Long prevDocument = (Long)hiddens.get(HIDDEN+SEPARATOR+formField);
+						if((prevDocument!=null)&&(prevDocument!=0L)) {
+							callSetMethod(formField,${classInstance},(Long)hiddens.get(HIDDEN+SEPARATOR+formField));
+						}
+					}
+				}
+			}
+		}
+#if(${hasImages}=="true")
+		if(igFolderId!=0L){
+			${classInstance}.setFolderIGId(igFolderId);
+		}
+#end
+#if(${hasDocuments}=="true")
+		if(dlFolderId!=0L){
+			${classInstance}.setFolderDLId(dlFolderId);
+		}
+#end
+		return ${classInstance};
+	}
+
+	public void deleteFiles() throws PortalException, SystemException{
+		if(igFolderId!=0L) {
+			IGFolderLocalServiceUtil.deleteFolder(igFolderId);
+		}
+		if(dlFolderId!=0L) {
+			DLFolderLocalServiceUtil.deleteFolder(dlFolderId);
+		}
+	}
+
+	private void callSetMethod(String formField, ${classDef_name} ${classInstance}, Long value) throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+		String strMethod = "set"+StringUtil.upperCaseFirstLetter(formField);
+		Method methodSet = ${classInstance}.getClass().getMethod(strMethod,long.class);
+		methodSet.invoke(${classInstance}, value);
+	}
+
+	public Long getIgFolderId() {
+		return igFolderId;
+	}
+
+	public void setIgFolderId(Long igFolderId) {
+		this.igFolderId = igFolderId;
+	}
+
+	public Long getDlFolderId() {
+		return dlFolderId;
+	}
+
+	public void setDlFolderId(Long dlFolderId) {
+		this.dlFolderId = dlFolderId;
+	}
+
+	/**
+	 * Create a serviceContext with given arguments
+	 * @param request
+	 * @param className
+	 * @param userId
+	 * @param groupId
+	 * @return
+	 * @throws PortalException
+	 * @throws SystemException
+	 */
+	private ServiceContext createServiceContext(ActionRequest request, String className, Long userId, Long groupId) throws PortalException, SystemException{
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(className, request);
+        serviceContext.setAddCommunityPermissions(true);
+        serviceContext.setAddGuestPermissions(true);
+        serviceContext.setUserId(userId);
+        serviceContext.setScopeGroupId(groupId);
+        return serviceContext;
+	}
+
+	/**
+	 * Create folders for upload images from our portlet to ImageGallery portlet
+	 * @param request
+	 * @param userId
+	 * @param groupId
+	 * @param serviceContext
+	 * @return
+	 * @throws PortalException
+	 * @throws SystemException
+	 */
+	private void createIGFolders(ActionRequest request,Long userId,Long groupId, ServiceContext serviceContext) throws PortalException, SystemException{
+		//Variables for folder ids
+		Long igMainFolderId = 0L;
+		Long igPortletFolderId = 0L;
+		Long igRecordFolderId = 0L;
+        //Search for folders
+        boolean igMainFolderFound = false;
+        boolean igPortletFolderFound = false;
+        try {
+        	//Get the main folder
+        	IGFolder igMainFolder = IGFolderLocalServiceUtil.getFolder(groupId,0,IMAGEGALLERY_MAINFOLDER);
+        	igMainFolderId = igMainFolder.getFolderId();
+        	igMainFolderFound = true;
+        	//Get the portlet folder
+        	IGFolder igPortletFolder = IGFolderLocalServiceUtil.getFolder(groupId,igMainFolderId,IMAGEGALLERY_PORTLETFOLDER);
+        	igPortletFolderId = igPortletFolder.getFolderId();
+        	igPortletFolderFound = true;
+        } catch (Exception ex) {
+        	ex.printStackTrace(); //Not found main folder
+        }
+        //Create main folder if not exist
+        if(!igMainFolderFound) {
+        	IGFolder newImageMainFolder = IGFolderLocalServiceUtil.addFolder(userId, 0, IMAGEGALLERY_MAINFOLDER, IMAGEGALLERY_MAINFOLDER_DESCRIPTION, serviceContext);
+        	igMainFolderId = newImageMainFolder.getFolderId();
+        	igMainFolderFound = true;
+        }
+        //Create portlet folder if not exist
+        if(igMainFolderFound && !igPortletFolderFound){
+        	IGFolder newImagePortletFolder = IGFolderLocalServiceUtil.addFolder(userId, igMainFolderId, IMAGEGALLERY_PORTLETFOLDER, IMAGEGALLERY_PORTLETFOLDER_DESCRIPTION, serviceContext);
+        	igPortletFolderFound = true;
+        	igPortletFolderId = newImagePortletFolder.getFolderId();
+        }
+        //Create this record folder
+        if(igPortletFolderFound){
+        	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        	Date date = new Date();
+        	String igRecordFolderName=dateFormat.format(date)+SEPARATOR+userId;
+        	IGFolder newImageRecordFolder = IGFolderLocalServiceUtil.addFolder(userId, igPortletFolderId,igRecordFolderName, "", serviceContext);
+        	igRecordFolderId = newImageRecordFolder.getFolderId();
+        }
+        igFolderId = igRecordFolderId;
+      }
+
+	/**
+	 * Create folders for upload documents from our portlet to DocumentLibrary portlet
+	 * @param request
+	 * @param userId
+	 * @param groupId
+	 * @param serviceContext
+	 * @return
+	 * @throws PortalException
+	 * @throws SystemException
+	 */
+	private void createDLFolders(ActionRequest request,Long userId,Long groupId,ServiceContext serviceContext) throws PortalException, SystemException{
+		//Variables for folder ids
+		Long dlMainFolderId = 0L;
+		Long dlPortletFolderId = 0L;
+		Long dlRecordFolderId = 0L;
+		//Search for folder in Document Library
+        boolean dlMainFolderFound = false;
+        boolean dlPortletFolderFound = false;
+        //Get main folder
+        try {
+        	//Get main folder
+        	DLFolder dlFolderMain = DLFolderLocalServiceUtil.getFolder(groupId,0,DOCUMENTLIBRARY_MAINFOLDER);
+        	dlMainFolderId = dlFolderMain.getFolderId();
+        	dlMainFolderFound = true;
+        	//Get portlet folder
+        	DLFolder dlFolderPortlet = DLFolderLocalServiceUtil.getFolder(groupId,dlMainFolderId,DOCUMENTLIBRARY_PORTLETFOLDER);
+        	dlPortletFolderId = dlFolderPortlet.getFolderId();
+        	dlPortletFolderFound = true;
+        } catch (Exception ex){
+        	ex.printStackTrace();//Not found Main Folder
+        }
+        //Create main folder if not exist
+        if(!dlMainFolderFound){
+        	DLFolder newDocumentMainFolder = DLFolderLocalServiceUtil.addFolder(userId, groupId, 0, DOCUMENTLIBRARY_MAINFOLDER, DOCUMENTLIBRARY_MAINFOLDER_DESCRIPTION, serviceContext);
+        	dlMainFolderId = newDocumentMainFolder.getFolderId();
+        	dlMainFolderFound = true;
+        }
+        //Create portlet folder if not exist
+        if(dlMainFolderFound && !dlPortletFolderFound){
+        	DLFolder newDocumentPortletFolder = DLFolderLocalServiceUtil.addFolder(userId, groupId, dlMainFolderId , DOCUMENTLIBRARY_PORTLETFOLDER, DOCUMENTLIBRARY_PORTLETFOLDER_DESCRIPTION, serviceContext);
+        	dlPortletFolderFound = true;
+            dlPortletFolderId = newDocumentPortletFolder.getFolderId();
+        }
+
+        //Create this record folder
+        if(dlPortletFolderFound){
+        	SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        	Date date = new Date();
+        	String dlRecordFolderName = dateFormat.format(date)+SEPARATOR+userId;
+        	DLFolder newDocumentRecordFolder = DLFolderLocalServiceUtil.addFolder(userId, groupId, dlPortletFolderId, dlRecordFolderName, dlRecordFolderName, serviceContext);
+        	dlRecordFolderId = newDocumentRecordFolder.getFolderId();
+        }
+        dlFolderId = dlRecordFolderId;
+	}
+
+	/**
+	  * Extract a given prefix and sufix from a String
+	  * This method looks for prefix and sufix, and erases them from itemName
+	  * 
+	  * @param prefix
+	  * @param sufix
+	  * @param itemName
+	  * @return
+	  */
+	private String extractPrefixAndSufix (String prefix, String sufix, String itemName){
+		String result = itemName;
+			if(itemName!=null && sufix!=null && prefix!=null){
+				result=result.replaceAll(prefix, "");
+				result=result.replaceAll(sufix, "");
+			}
+		return result;
+	}
+}

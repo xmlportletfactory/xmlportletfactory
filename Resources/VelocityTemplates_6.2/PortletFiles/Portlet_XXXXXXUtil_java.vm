@@ -1,0 +1,170 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/util" )
+#set( $createName = "/${classDef_name}Util.java" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.util;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
+
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.RenderRequest;
+import javax.portlet.EventRequest;
+
+#if ($asset)
+import com.liferay.portal.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
+#end
+
+import com.liferay.portal.model.Layout;
+import com.liferay.portal.model.LayoutConstants;
+import com.liferay.portal.model.LayoutTypePortlet;
+import com.liferay.portal.model.PortletConstants;
+import com.liferay.portal.service.LayoutLocalServiceUtil;
+import com.liferay.portal.util.PortalUtil;
+import com.liferay.portal.NoSuchLayoutException;
+
+/**
+ * @author ${author} 
+ * @author Juan Gonzalez P. 
+ */
+public class ${classDef_name}Util {
+
+#if ($asset)
+
+	private static boolean isFromAsset(ThemeDisplay themeDisplay, boolean paramFromAsset) throws SystemException{
+	
+		boolean returnVal = paramFromAsset;
+
+		Layout layout = LayoutLocalServiceUtil.fetchLayout(themeDisplay.getPlid());
+
+		if (Validator.isNotNull(layout) && layout.isTypeControlPanel()){
+			returnVal = true;		
+		}	
+
+		return returnVal;
+	}
+	public static boolean isFromAsset(RenderRequest request)
+		throws SystemException {
+
+		boolean fromAsset = ParamUtil.getBoolean(request, "fromAsset", false);
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+		return isFromAsset (themeDisplay, fromAsset);		
+	}
+	
+	public static boolean isFromAsset(ActionRequest request)
+		throws SystemException {
+
+		boolean fromAsset = ParamUtil.getBoolean(request, "fromAsset", false);
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+		return isFromAsset (themeDisplay, fromAsset);
+	}
+
+	public static boolean isFromAsset(
+			EventRequest request)
+		throws SystemException {
+
+		boolean fromAsset = ParamUtil.getBoolean(request, "fromAsset", false);
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+		return isFromAsset (themeDisplay, fromAsset);
+	}
+
+
+#end	
+
+	public static void addParametersForDefaultView(
+		ActionResponse response) {	
+		
+		response.setRenderParameter("view", "");
+
+	}
+
+	public static void addParametersForAdd(
+		ActionResponse response) {	
+		
+		response.setRenderParameter("view", "edit${classDef_name}");
+		response.setRenderParameter("editType", "add");
+
+	}
+
+	public static void addParametersForAddWithErrors(
+		ActionResponse response) {	
+		
+		addParametersForAdd(response);
+
+		response.setRenderParameter("addErrors", "true");
+
+	}
+
+	public static void addParametersForEdit(
+		ActionResponse response, String entryId) {	
+		
+		response.setRenderParameter("view", "edit${classDef_name}");
+		response.setRenderParameter("editType", "edit");
+		if (Validator.isNotNull(entryId)){
+			response.setRenderParameter("${fieldNames.get(0)}",entryId);
+		}
+	}
+
+	public static void addParametersForEdit(
+		ActionResponse response, long entryId) {	
+		
+		addParametersForEdit (response, Long.toString(entryId));
+	}
+
+	public static void addParametersForViewEntry(
+		ActionResponse response, String entryId) {	
+		
+		response.setRenderParameter("view", "edit${classDef_name}");
+		response.setRenderParameter("editType", "view");
+		if (Validator.isNotNull(entryId)){
+			response.setRenderParameter("${fieldNames.get(0)}",entryId);
+		}
+	}
+
+	public static void addParametersForViewEntry(
+		ActionResponse response, long entryId) {	
+		
+		addParametersForViewEntry (response, Long.toString(entryId));
+	}
+
+	public static long getPlid(long groupId)
+		throws Exception {
+
+		String portletId="${classDef_name}_WAR_${commonData.getProjectName()}portlet";
+		
+		long plid = PortalUtil.getPlidFromPortletId(groupId, portletId);
+
+		if (plid != LayoutConstants.DEFAULT_PLID) {
+			Layout layout = LayoutLocalServiceUtil.getLayout(plid);
+
+			LayoutTypePortlet layoutTypePortlet =
+					(LayoutTypePortlet)layout.getLayoutType();
+
+			for (String curPortletId : layoutTypePortlet.getPortletIds()) {
+				String curRootPortletId = PortletConstants.getRootPortletId(
+						curPortletId);
+
+				if (portletId.equals(curRootPortletId)) {
+					portletId = curPortletId;
+
+					break;
+				}
+			}
+
+			return plid;
+		}
+
+		throw new NoSuchLayoutException();
+	}
+
+	
+
+	
+}

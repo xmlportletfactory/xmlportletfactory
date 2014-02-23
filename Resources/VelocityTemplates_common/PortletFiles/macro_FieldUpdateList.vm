@@ -1,0 +1,13 @@
+#macro( FieldUpdateList $fieldUpdateListStarting )
+#set ($strlist = "")
+#set ( $fieldUpdateList_i = 0 )
+#foreach ( $fname in $fieldNames )
+#set ( $fieldUpdateList_i = $fieldUpdateList_i + 1)
+#if ( ($fieldUpdateListStarting == 0) || (($fieldUpdateListStarting == 1) && ($fieldUpdateList_i > 1 )) )
+#set ($strlist = "$strlist$fname = ?")
+#if ( ($fieldUpdateList_i < $fieldCount) || ($fieldUpdateListStarting == 0 && $fieldUpdateList_i <= ${fieldCount}) )
+#set ($strlist = "$strlist, ")
+#end
+#end
+#end
+$strlist#end

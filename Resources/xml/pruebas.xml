@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+    <commonData>
+        <client>PruebasJack</client>
+        <projectName>JackRider</projectName>
+        <version>1</version>
+        <bbddApplicationsData>
+            <driver>com.mysql.jdbc.Driver</driver>
+            <url>jdbc:mysql://localhost/bicidevalde01?useUnicode=true</url>
+            <username>bicidevalde</username>
+            <password>bicidevalde</password>
+            <maxactive>20</maxactive>
+            <poolable>true</poolable>
+        </bbddApplicationsData>
+    </commonData>
+    <applications>
+    <!-- ZONA -->
+        <application>
+            <classDef>
+                <name>BiciZona</name>
+                <title>Mantenimiento de Zonas</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>zonas</name>
+                <fields>
+                    <field>
+                        <name>zonaId</name>
+                        <title>Codigo de Zona</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>zonaDescripcion</name>
+                        <title>Descripcion de Zona</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>fechaCreacion</name>
+                        <title>Fecha Creacion Zona</title>
+                        <type>
+                            <date></date>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>kilometros</name>
+                        <title>Kilometros Zona</title>
+                        <type>
+                            <int>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <zerofill>true</zerofill>
+                                <nullable>false</nullable>
+                            </int>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>facil</name>
+                        <title>Facil</title>
+                        <type>
+                            <enum>
+                                <values>'SI','NO'</values>
+                                <default>'SI'</default>
+                            </enum>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>dificulFisId</name>
+                        <title>Dificultad Fisica</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <validation>
+                            <className>BiciDificultadFisica</className>
+                            <fieldName>dificulFisId</fieldName>
+                            <orderByField>dificulFisNombre</orderByField>
+                        </validation>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>rangoId</name>
+                        <title>Rango</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <validation>
+                            <className>Rangos</className>
+                            <fieldName>rangoId</fieldName>
+                            <orderByField>rangoNombre</orderByField>
+                        </validation>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+        </application>
+                <!-- DIFICULTAD FISICA -->
+        <application>
+            <classDef>
+                <name>BiciDificultadFisica</name>
+                <title>Dificultad fisica</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>dificulfis</name>
+                <fields>
+                    <field>
+                        <name>dificulFisId</name>
+                        <title>Codigo de Dificultad Fisica</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>dificulFisNombre</name>
+                        <title>Descripcion Corta</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+
+                    <field>
+                        <name>dificulFisDescripcion</name>
+                        <title>Descripcion Larga</title>
+                        <type>
+                            <text></text>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+        </application>
+                <!-- rango -->
+        <application>
+            <classDef>
+                <name>Rangos</name>
+                <title>Rango de Zona</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>rangos</name>
+                <fields>
+                    <field>
+                        <name>rangoId</name>
+                        <title>Codigo de Rango</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>rangoNombre</name>
+                        <title>Nombre Rango</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+        </application>
+                        <!-- imagenes -->
+        <application>
+            <classDef>
+                <name>Fotos</name>
+                <title>Fotos de Zona</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>fotos</name>
+                <fields>
+                    <field>
+                        <name>fotoId</name>
+                        <title>Codigo de imagen</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>fotoNombre</name>
+                        <title>Nombre Foto</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>foto</name>
+                        <title>foto</title>
+                        <type>
+                            <image />
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                   </field>
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+        </application>
+    </applications>
+</definition>

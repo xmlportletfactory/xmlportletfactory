@@ -1,0 +1,24 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/social" )
+#set( $createName = "/${classDef_name}ActivityKeys.java" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+
+#if ($generateActivity)
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.social;
+
+/**
+ * @author ${author}
+ * @author Davide N.P. Rossi.
+ */
+ 
+public class ${classDef_name}ActivityKeys {
+	public static final int ADD_${classDef_name.toUpperCase()} = 1;
+	public static final int UPDATE_${classDef_name.toUpperCase()} = 2;
+}
+#else
+#*
+     As there are no activity services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

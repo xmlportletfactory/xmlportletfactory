@@ -1,0 +1,192 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF" )
+#set ($classDef_name = $application.getClassDef().getName())
+#set( $createName = "/service.xml" )
+#set( $overrideGeneratePortlet = "true" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_TranslateFieldType.vm")
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 6.0.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_6_0_0.dtd">
+<service-builder package-path="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}">
+	<author>Jack A. Rider</author>
+	<namespace>${commonData.getProjectName().toLowerCase()}</namespace>
+#foreach($table in $applications)
+#set ($hasWorkflow=false)
+#if ($table.getClassDef().isSetWorkflow())
+#if ($table.getClassDef().getWorkflow() == "true")
+#set ($hasWorkflow=true)
+#end
+#end
+	<entity name="${table.getClassDef().getName()}" local-service="true" remote-service="false">
+#set ($fields = $table.getFileDef().getFields().getFieldArray())
+#set( $i = 0 )
+#set ($hasImages="false")
+#set ($hasDocuments="false")
+#foreach($field in $fields)
+#set ( $i = $i + 1 )
+#if ( ($i == 1) )
+		<!-- Primary key column -->
+		<column name="${field.getName()}" type="#TranslateFieldType(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})" primary="true" />
+
+		<!-- Foreign key columns -->
+		<column name="companyId" type="long" />
+		<column name="groupId" type="long" />
+		<column name="userId" type="long" />
+
+		<!-- Other columns -->
+#else
+#if (${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} == "image")
+		<column name="${field.getName()}"  type="long" />
+#set ($hasImages="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} =="document")
+		<column name="${field.getName()}"  type="long" />
+#set ($hasDocuments="true")
+#else
+#if (${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} != "calculated")
+		<column name="${field.getName()}" type="#TranslateFieldType(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})" />
+#end
+#end
+#end
+#end
+#if ($hasImages=="true")
+		<column name="folderIGId" type="long" />
+#end
+#if ($hasDocuments=="true")
+		<column name="folderDLId" type="long" />
+#end
+#if ($hasWorkflow)
+
+		<!-- Workflow related fields -->
+		<column name="status" type="int" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" />
+		<column name="statusDate" type="Date" />
+		
+		<!-- Workflow related Finders -->
+		<finder name="C_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="status" />
+		</finder>
+		<finder name="G_S" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="status" />
+		</finder>
+		<finder name="C_U_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="userId" />
+			<finder-column name="status" />
+		</finder>		
+		<finder name="G_U_S" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="userId" />
+			<finder-column name="status" />
+		</finder>	
+		<finder name="U_S" return-type="Collection">
+			<finder-column name="userId" />
+			<finder-column name="status" />
+		</finder>		
+#end
+
+		<!-- Finder Methods Standard -->
+		<finder name="GroupId" return-type="Collection">
+			<finder-column name="groupId" />
+		</finder>
+		<finder name="UserId" return-type="Collection">
+			<finder-column name="userId" />
+		</finder>
+		<finder name="UserIdGroupId" return-type="Collection">
+			<finder-column name="userId" />
+			<finder-column name="groupId" />
+		</finder>
+#set ($valifield = 0)
+#foreach($field in $fields)
+#if($field.getValidation().getFieldName() == ${field.getName()})
+#if ($valifield == 0)
+
+		<!-- Finder Methods when Validations  -->
+#set ($valifield = 1)
+#end
+		<finder name="$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)" return-type="Collection">
+			<finder-column name="${field.getName()}" />
+		</finder>
+#end
+#end
+
+#foreach($field in $fields)
+#set ($uniqueField = "false")
+#if ($field.getType().getInt().isSetUnique())
+#set ($uniqueField = "true")
+#elseif ($field.getType().getLong().isSetUnique())
+#set ($uniqueField = "true")
+#elseif ($field.getType().getNumeric().isSetUnique())
+#set ($uniqueField = "true")
+#elseif ($field.getType().getFloat().isSetUnique())
+#set ($uniqueField = "true")
+#elseif ($field.getType().getVarchar().isSetUnique())
+#set ($uniqueField = "true")
+#end
+#if ($uniqueField == "true")
+
+		<!-- Finder For unique fields  -->
+		<finder name="$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)" return-type="${table.getFileDef().getName()}" unique="true">
+			<finder-column name="${field.getName()}" />
+		</finder>
+#end		
+#end
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($table.getClassDef().getName() == $detailfile.getDetailFileClassName())
+
+		<!-- Finder Methods when Detail Files -->
+#set ($detailFinderName = $detailfile.getConnectionFieldName().substring(0,1).toUpperCase() + $detailfile.getConnectionFieldName().substring(1))
+		<finder name="${detailFinderName}" return-type="Collection">
+			<finder-column name="${detailfile.getConnectionFieldName()}" />
+		</finder>
+		<finder name="${detailFinderName}GroupId" return-type="Collection">
+			<finder-column name="${detailfile.getConnectionFieldName()}" />
+			<finder-column name="groupId" />
+		</finder>
+#end
+#end
+#end
+#set ($allReadyCreated="")
+#foreach($applicationIterator in $applications)
+#set ($fieldArray = $applicationIterator.getFileDef().getFields().getFieldArray())
+#foreach($fieldOfArray in $fieldArray)
+#if (${fieldOfArray.isSetValidation()})
+#if (${fieldOfArray.getValidation().isSetDepends()})
+#if ($fieldOfArray.getValidation().getClassName() == $table.getClassDef().getName())
+#if ($allReadyCreated!="$table.getClassDef().getName()")
+#set ($allReadyCreated="$table.getClassDef().getName()")
+
+		<!-- Finder For chain validation fields  -->
+		<finder name="ChainValidationsBy$fieldOfArray.getValidation().getDepends().getAgainstFieldName().substring(0,1).toUpperCase()$fieldOfArray.getValidation().getDepends().getAgainstFieldName().substring(1)" return-type="Collection">
+			<finder-column name="${fieldOfArray.getValidation().getDepends().getAgainstFieldName()}" />
+		</finder>
+#end
+#end
+#end
+#end
+#end
+#end
+		<!-- References -->
+#if($hasDocuments == "true")
+		<reference package-path="com.liferay.portlet.documentlibrary" entity="DLFolder" />
+#end
+#if ($hasWorkflow)
+
+		<!-- References -->		
+		<reference package-path="com.liferay.portal" entity="WorkflowInstanceLink" />
+#end
+#if ($table.getClassDef().isSetGenerateActivity())
+#if ($table.getClassDef().getGenerateActivity() == "true")
+		<reference package-path="com.liferay.portlet.social" entity="SocialActivity" />
+#end
+#end
+	</entity>
+#end
+	<exceptions>
+#foreach($table in $applications)
+		<exception>NoSuch${table.getClassDef().getName()}</exception>
+#end		
+	</exceptions>
+</service-builder>

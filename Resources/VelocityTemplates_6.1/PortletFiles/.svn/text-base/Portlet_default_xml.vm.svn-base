@@ -1,0 +1,81 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/resource-actions" )
+#set( $createName = "/default.xml" )
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resource-action-mapping>
+#foreach($table in $applications)
+	<portlet-resource>
+		<portlet-name>$table.getClassDef().getName()</portlet-name>
+		<supports>
+#if ($table.getClassDef().isSetShowInControlPanel())
+#if ($table.getClassDef().getShowInControlPanel() == "true")
+			<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+			<action-key>ADD_TO_PAGE</action-key>
+#end
+#end
+			<action-key>CONFIGURATION</action-key>
+			<action-key>VIEW</action-key>
+		</supports>
+		<site-member-defaults>
+			<action-key>VIEW</action-key>
+		</site-member-defaults>
+		<guest-defaults>
+			<action-key>VIEW</action-key>
+		</guest-defaults>
+#if ($table.getClassDef().isSetShowInControlPanel())
+#if ($table.getClassDef().getShowInControlPanel() == "true")
+		<guest-unsupported>
+			<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+		</guest-unsupported>
+
+#else
+		<guest-unsupported/>
+#end
+#else
+		<guest-unsupported/>
+#end
+		
+		
+	</portlet-resource>
+	<model-resource>
+		<model-name>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.$table.getClassDef().getName()</model-name>
+		<portlet-ref>
+			<portlet-name>$table.getClassDef().getName()</portlet-name>
+		</portlet-ref>
+		<supports>
+			<action-key>ADD_$table.getClassDef().getName().toUpperCase()</action-key>
+			<action-key>PERMISSIONS</action-key>
+		</supports>
+		<site-member-defaults/>
+		<guest-defaults/>
+		<guest-unsupported>
+			<action-key>ADD_$table.getClassDef().getName().toUpperCase()</action-key>
+			<action-key>PERMISSIONS</action-key>
+		</guest-unsupported>
+	</model-resource>
+	<model-resource>
+		<model-name>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.$table.getClassDef().getName()</model-name>
+		<portlet-ref>
+			<portlet-name>$table.getClassDef().getName()</portlet-name>
+		</portlet-ref>
+		<supports>
+			<action-key>DELETE</action-key>
+			<action-key>PERMISSIONS</action-key>
+			<action-key>UPDATE</action-key>
+			<action-key>VIEW</action-key>
+		</supports>
+		<site-member-defaults>
+			<action-key>DELETE</action-key>
+			<action-key>UPDATE</action-key>
+			<action-key>VIEW</action-key>
+		</site-member-defaults>
+		<guest-defaults>
+			<action-key>VIEW</action-key>
+		</guest-defaults>
+		<guest-unsupported>
+			<action-key>PERMISSIONS</action-key>
+		</guest-unsupported>
+	</model-resource>
+#end
+</resource-action-mapping>

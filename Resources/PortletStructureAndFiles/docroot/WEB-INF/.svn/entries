@@ -1,0 +1,43 @@
+10
+
+dir
+512
+svn+ssh://svn.code.sf.net/p/xmlportlet/code/trunk/Resources/PortletStructureAndFiles/docroot/WEB-INF
+svn+ssh://svn.code.sf.net/p/xmlportlet/code
+
+
+
+2012-07-16T17:24:15.001782Z
+375
+moisesbelda
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+849cc71a-e405-4064-8904-ecb71b08fc0e
+
+lib
+dir
+
+src
+dir
+
+classes
+dir
+
+sql
+dir
+
+tld
+dir
+

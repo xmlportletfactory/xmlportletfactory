@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_sdk_space" name="XMLPortletFactory Builds">
+    <target name="create_sdk_space">
+    	<antcall target="compile"/>
+    	<antcall target="create_xmlportletfactory_jar"/>
+    	<antcall target="create_resources_sdk_zip"/>
+    	<antcall target="create_xmlportletfactory_zip"/>
+    	<antcall target="cleanup"/> 
+    </target>
+	<target name="create_xmlportletfactory_jar">
+		<delete dir="Resources/sdk_files/dist" />
+		<mkdir dir="Resources/sdk_files/dist/XMLPortletFactory" />
+        <jar destfile="Resources/sdk_files/dist/XMLPortletFactory/XMLPortletFactory.jar" basedir="bin">
+            <manifest>
+                <attribute name="Main-Class" value="org.xmlportletfactory.XMLPortletFactory"/>
+                <attribute name="Class-Path" value=". lib/commons-fileupload.jar lib/velocity-1.7-beta1-dep.jar lib/xbean.jar"/>
+            </manifest>
+        	<fileset dir="."
+        		excludes=".classpath .project build.xml 
+        				.settings/**,
+        				.svn/**,
+        				dist/**,
+        				lib/**,
+        				bin/**,
+        				Resources/**,
+						Resources/.svn/**,
+						Resources/Doc/**,
+        				src/**"
+            />
+            <zipfileset excludes="META-INF/*.SF" src="lib/xmlportletfactory.jar"/>
+        </jar>
+	</target>
+	<target name="create_resources_sdk_zip">
+		<zip destfile="Resources/sdk_files/dist/XMLPortletFactory/XMLPortlet_resources.zip"
+			basedir="."
+			includes="lib/**,
+			          Resources/PortletStructureAndFiles/**,
+				  	  Resources/VelocityTemplates_common/**,
+				  	  Resources/VelocityTemplates_6.0/**,
+		  	  		  Resources/VelocityTemplates_6.1/**,
+					  Resources/VelocityTemplates_6.2/**,
+					  Resources/xml/xmlportletfactory.xsd,
+					  Resources/xml/Example01.xml,
+			          Resources/cfg/**"
+			excludes="lib/xmlportletfactory.jar,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-portlet.tld,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-portlet-ext.tld,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-security.tld,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-theme.tld,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-ui.tld,
+					  Resources/PortletStructureAndFiles/docroot/WEB-INF/tld/liferay-util.tld">
+		</zip>
+	</target>
+
+	<target name="create_xmlportletfactory_zip">
+		<tstamp>
+			<format property="today_es" pattern="yyyyMMdd" />
+		</tstamp>
+		
+		<copy file="./Resources/sdk_files/build-common-portlet.xml" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		<copy file="./Resources/sdk_files/build-portlet.xml" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		<copy file="./Resources/sdk_files/build.xml" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		<copy file="./Resources/sdk_files/create.bat" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		<copy file="./Resources/sdk_files/create.sh" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		<copy file="./Resources/sdk_files/License.txt" todir="./Resources/sdk_files/dist/XMLPortletFactory" />
+		
+		<mkdir dir="./dist" />
+
+		<zip destfile="./dist/XMLPortletFactory_${today_es}.zip"
+			basedir="./Resources/sdk_files/dist"
+			includes="**">
+		</zip>
+	</target>
+
+	<target name="cleanup">
+		<delete dir="Resources/sdk_files/dist" />
+	</target>
+	
+    <target name="compile">
+        <delete dir="bin"/>
+        <mkdir dir="bin"/>
+    	<javac destdir="bin" includeantruntime="true">
+    		<src path="src" />
+    		<classpath>
+    			<fileset dir="lib" />
+    		</classpath>
+    	</javac>
+    </target>
+	
+	
+</project>

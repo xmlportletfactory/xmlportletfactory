@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+	<commonData>
+        <client>Cliente3</client>
+		<projectName>TestCamposK</projectName>
+        <version>1</version>
+	</commonData>
+	<applications>
+		<application>
+			<classDef>
+				<name>TestCamposK</name>
+				<title>Mantenimiento de TestCamposK</title>
+				<mode>
+					<add>true</add>
+					<delete>true</delete>
+					<modify>true</modify>
+					<browse>true</browse>
+				</mode>
+			</classDef>
+			<fileDef>
+				<name>test</name>
+				<fields>
+					<field>
+						<name>testid</name>
+						<title>Codigo</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+								<order>true</order>
+							</long>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>testint</name>
+						<title>testInt</title>
+						<type>
+							<int>
+								<length>5</length>
+								<signed>false</signed>
+								<zerofill>false</zerofill>
+								<order>true</order>
+								<nullable>false</nullable>
+							</int>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+					<field>
+						<name>testvarchar1</name>
+						<title>Correo electronico</title>
+						<type>
+							<varchar>
+								<length>40</length>
+								<regexp>email</regexp>
+								<order>true</order>
+							</varchar>
+						</type>
+						<showFieldInView>true</showFieldInView>
+					</field>										
+				</fields>
+			</fileDef>
+		</application>
+	</applications>
+</definition>
+

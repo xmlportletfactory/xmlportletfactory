@@ -1,0 +1,73 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/workflow" )
+#set( $createName = "/${classDef_name}WorkflowHandler.java" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+#if ($hasWorkflow)
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.workflow;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+// import com.liferay.portal.security.permission.ResourceActionsUtil;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.theme.ThemeDisplay;
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+
+import com.liferay.portal.kernel.language.LanguageUtil;
+
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
+
+import java.io.Serializable;
+import java.util.Locale;
+import java.util.Map;
+
+/**
+ * @author Juan Gonzalez P. 
+ */
+public class ${application.getClassDef().getName()}WorkflowHandler extends BaseWorkflowHandler {
+
+	public static final String CLASS_NAME = ${application.getClassDef().getName()}.class.getName();
+
+	public String getClassName() {
+		return CLASS_NAME;
+	}
+
+	public String getType(Locale locale) {
+		return LanguageUtil.get(locale, "model.resource." + CLASS_NAME);		
+	}
+
+	public String getTitle(long classPK, Locale locale) {
+
+//		String retVal = super.getTitle(classPK , locale); 
+		String retVal = super.getTitle(classPK);
+		
+		if (retVal == null){
+			retVal = getType(locale);
+		}
+		return retVal;
+	}
+	
+	public ${application.getClassDef().getName()} updateStatus(
+			int status, Map<String, Serializable> workflowContext)
+		throws PortalException, SystemException {
+
+		                
+		long userId = GetterUtil.getLong(
+			(String)workflowContext.get(WorkflowConstants.CONTEXT_USER_ID));
+		long classPK = GetterUtil.getLong(
+			(String)workflowContext.get(
+				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK));
+
+		ServiceContext serviceContext = (ServiceContext)workflowContext.get("serviceContext");
+
+		return ${application.getClassDef().getName()}LocalServiceUtil.updateStatus(userId, classPK, status, serviceContext);
+	}
+}
+#else
+#*
+     As there are no workflow services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

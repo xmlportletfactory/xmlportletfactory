@@ -1,0 +1,32 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF" )
+#set( $createName = "/liferay-hook.xml" )
+#if (($hasWorkflow=="true" || $generateActivity=="true") || ($hasWorkflow=="true" && $generateActivity=="true"))
+<?xml version="1.0"?>
+<!DOCTYPE hook PUBLIC "-//Liferay//DTD Hook 6.0.0//EN" "http://www.liferay.com/dtd/liferay-hook_6_0_0.dtd">
+<hook>
+   <language-properties>
+      content-portal/Language.properties
+   </language-properties>
+   <language-properties>
+      content-portal/Language_en.properties
+   </language-properties>
+   <language-properties>
+      content-portal/Language_es.properties
+   </language-properties>
+   <language-properties>
+      content-portal/Language_fi.properties
+   </language-properties>
+   <language-properties>
+      content-portal/Language_fr.properties
+   </language-properties>
+   <language-properties>
+      content-portal/Language_it.properties
+   </language-properties>
+</hook>
+#else
+#*
+     As there are no services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

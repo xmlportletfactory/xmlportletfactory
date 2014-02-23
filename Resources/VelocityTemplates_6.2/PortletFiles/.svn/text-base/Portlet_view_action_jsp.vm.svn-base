@@ -1,0 +1,59 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/JSPs/${fileDef_name}" )
+#set( $createName = "/view_action.jsp" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_jsp.txt")
+<%@include file="../init.jsp" %>
+
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name}"%>
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil"%>
+<%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission.${classDef_name}EntryPermission"%>
+
+<%
+String containerStart = (String) request.getAttribute("containerStart");
+String containerEnd =  (String) request.getAttribute("containerEnd");
+String orderByType = (String) request.getAttribute("orderByType");
+String orderByCol =  (String) request.getAttribute("orderByCol");
+Integer cur          =  (Integer) request.getAttribute("cur");
+String ${classDef_name.toLowerCase()}Filter = ParamUtil.getString(request, "${classDef_name}Filter");
+ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
+${classDef_name} ${classInstance} = (${classDef_name})row.getObject();
+
+long groupId = ${classInstance}.getGroupId();
+String name = ${classDef_name}.class.getName();
+String primKey = String.valueOf(${classInstance}.getPrimaryKey());
+#set ($firstDetail="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstDetail}=="true")
+String ${detailfile.getConnectionFieldName()}Str = ${classInstance}.get${detailfile.getConnectionFieldName().substring(0,1).toUpperCase()}${detailfile.getConnectionFieldName().substring(1)}() + "";
+#set($firstDetail="false")
+#end
+#end
+
+%>
+<c:if test="<%= ${classDef_name}EntryPermission.contains(permissionChecker, ${classInstance}, ActionKeys.UPDATE) %>">
+    <portlet:actionURL name="event${application.getClassDef().getName()}" var="event${application.getClassDef().getName()}URL">
+        <portlet:param name="resourcePrimKey" value="<%=primKey %>" />
+        <portlet:param name="containerStart" value="<%= containerStart %>" />
+        <portlet:param name="containerEnd" value="<%= containerEnd %>" />
+		<portlet:param name="cur" value="<%= String.valueOf(cur)  %>" />
+        <portlet:param name="${classDef_name}Filter" value="<%= ${classDef_name.toLowerCase()}Filter %>" />
+#set ($firstDetail="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstDetail}=="true")
+        <portlet:param name="${detailfile.getConnectionFieldName()}" value="<%= ${detailfile.getConnectionFieldName()}Str %>" />
+#set($firstDetail="false")
+#end
+#end
+    </portlet:actionURL>
+<%
+	if (primKey.equalsIgnoreCase((String)request.getAttribute("highlightRowWithKey"))) {
+%>
+    <liferay-ui:icon image="forward" url="<%=event${application.getClassDef().getName()}URL.toString() %>" />
+<%
+	} else {
+%>
+    <liferay-ui:icon image="view" url="<%=event${application.getClassDef().getName()}URL.toString() %>" />
+<%
+	}
+%>
+</c:if>

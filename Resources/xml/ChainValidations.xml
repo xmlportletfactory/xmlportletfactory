@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+<!-- 
+
+	ChainValidations.xml is an example on how to make the population of a combo depend on
+	the value of another combo. For the explanation we use a customers table where there are
+	values of country and province, having the province table a field (provinceCountryId)
+	to select the country it belongs to. 
+	
+	This way, province combo validation in clients jsp, will be automatically populated 
+	depending on the value selected in the country combo. 
+
+ -->
+    <commonData>
+        <client>Xmlpf</client>
+        <projectName>ChainValidations</projectName>
+        <version>1</version>
+    </commonData>
+    <applications>
+	<!--
+    	Countries:
+			
+			Just the country definition. Id and name
+	 -->
+        <application>
+			<classDef>
+				<name>Countries</name>
+				<title>Countries</title>
+				<mode>
+					<add>true</add>
+					<delete>true</delete>
+					<modify>true</modify>
+					<browse>true</browse>
+				</mode>
+				<generatePortlet>true</generatePortlet>
+				<restrictBy>
+					<companyId>true</companyId>
+					<groupId>false</groupId>
+					<userId>false</userId>
+				</restrictBy>
+			</classDef>
+			<fileDef>
+				<name>Countries</name>
+				<fields>
+					<field>
+						<name>countryId</name>
+						<title>Country Id</title>
+						<type>
+							<long>
+								<length>5</length>
+								<signed>false</signed>
+								<nullable>false</nullable>
+							</long>
+						</type>
+						<showFieldInView>false</showFieldInView>
+					</field>
+					<field>
+						<name>countryName</name>
+						<title>Country Name</title>
+						<type>
+							<varchar>
+								<length>50</length>
+								<filter>true</filter>
+								<order>true</order>
+							</varchar>
+						</type>
+						<showFieldInView>true</showFieldInView>
+						<required>true</required>
+					</field>
+				</fields>
+			</fileDef>
+		</application>
+	<!--
+    	Provinces:
+			
+			Province definition. Id, name and the country it belongs
+	 -->
+        <application>
+            <classDef>
+                <name>Provinces</name>
+                <title>Provinces</title>
+                <mode>
+                	<add>true</add>
+                	<delete>true</delete>
+                	<modify>true</modify>
+                	<browse>true</browse>
+                </mode>
+                <generatePortlet>true</generatePortlet>
+                <restrictBy>
+                	<companyId>true</companyId>
+                	<groupId>false</groupId>
+                	<userId>false</userId>
+                </restrictBy>
+            </classDef>
+            <fileDef>
+                <name>Provinces</name>
+                <fields>
+                    <field>
+                        <name>provinceId</name>
+                        <title>Province Id</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+								<order>true</order> 
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>provinceName</name>
+                        <title>Province Name</title>
+                        <type>
+                            <varchar>
+                                <length>50</length>
+                                <filter>true</filter>
+                                <order>true</order>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                        <required>true</required>
+                    </field>
+                    <field>
+                        <name>provinceCountryId</name>
+                        <title>Country</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+								<order>true</order> 
+                            </long>
+                        </type>
+						<validation>
+							<className>Countries</className>
+							<fieldName>countryId</fieldName>
+							<orderByField>countryName</orderByField>
+						</validation>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                </fields>
+            </fileDef>
+        </application>
+	<!--
+    	Customers:
+			
+			Customer definition. Id, name, the country and province it belongs, being the
+			province dependent of the country.
+	 -->
+
+        <application>
+            <classDef>
+                <name>Customers</name>
+                <title>Customers</title>
+                <mode>
+                	<add>true</add>
+                	<delete>true</delete>
+                	<modify>true</modify>
+                	<browse>true</browse>
+                </mode>
+                <generatePortlet>true</generatePortlet>
+                <restrictBy>
+                	<companyId>true</companyId>
+                	<groupId>false</groupId>
+                	<userId>false</userId>
+                </restrictBy>
+            </classDef>
+            <fileDef>
+                <name>Customers</name>
+                <fields>
+                    <field>
+                        <name>customerId</name>
+                        <title>Customer Id</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>customerName</name>
+                        <title>Customer Name</title>
+                        <type>
+                            <varchar>
+                                <length>50</length>
+                                <filter>true</filter>
+                                <order>true</order>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                        <required>true</required>
+                    </field>
+					<field>
+                        <name>customerCountryId</name>
+                        <title>Country</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <validation>
+                                <className>Countries</className>
+                                <fieldName>countryId</fieldName>
+                                <orderByField>countryName</orderByField>
+                        </validation>
+                        <showFieldInView>true</showFieldInView>
+                        <required>true</required>
+                    </field>
+					<field>
+                        <name>customerProvinceId</name>
+                        <title>Province</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <validation>
+                                <className>Provinces</className>
+                                <fieldName>provinceId</fieldName>
+                                <orderByField>provinceName</orderByField>
+                                <depends>
+                                	<localFieldName>customerCountryId</localFieldName>
+                                	<againstFieldName>provinceCountryId</againstFieldName>
+                                </depends>
+                        </validation>
+                        <showFieldInView>true</showFieldInView>
+                        <required>true</required>
+                    </field>
+                </fields>
+            </fileDef>
+        </application>
+    </applications>
+</definition>

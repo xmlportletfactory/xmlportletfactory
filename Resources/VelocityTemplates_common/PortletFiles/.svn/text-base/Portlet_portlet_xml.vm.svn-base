@@ -1,0 +1,111 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF" )
+#set( $createName = "/portlet.xml" )
+<?xml version="1.0"?>
+
+<portlet-app
+	version="2.0"
+	xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+>
+#foreach($table in $applications)
+#set( $generatePortlet = "true" )
+#if ($table.getClassDef().isSetGeneratePortlet()) 
+#if ($table.getClassDef().getGeneratePortlet() == "false")
+#set ( $generatePortlet = "false" )
+#end
+#end
+#if ($generatePortlet == "true" )
+	<portlet>
+		<portlet-name>$table.getClassDef().getName()</portlet-name>
+		<display-name>$table.getClassDef().getTitle()</display-name>
+		<portlet-class>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.$table.getClassDef().getName()Portlet</portlet-class>
+		<init-param>
+			<name>view-jsp</name>
+			<value>/JSPs/${table.getFileDef().getName()}/view.jsp</value>
+		</init-param>
+		<init-param>
+			<name>edit-jsp</name>
+			<value>/JSPs/${table.getFileDef().getName()}/edit.jsp</value>
+		</init-param>
+		<init-param>
+			<name>edit-${table.getFileDef().getName()}-jsp</name>
+			<value>/JSPs/${table.getFileDef().getName()}/edit${table.getFileDef().getName()}.jsp</value>
+		</init-param>
+		<init-param>
+			<name>view-${table.getFileDef().getName()}-jsp</name>
+			<value>/JSPs/${table.getFileDef().getName()}/view${table.getFileDef().getName()}.jsp</value>
+		</init-param>
+		<init-param>
+			<name>help-jsp</name>
+			<value>/JSPs/${table.getFileDef().getName()}/help.jsp</value>
+		</init-param>
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>VIEW</portlet-mode>
+			<portlet-mode>EDIT</portlet-mode>
+			<portlet-mode>HELP</portlet-mode>
+		</supports>
+		<resource-bundle>content.Language</resource-bundle>
+		<portlet-info>
+			<title>$table.getClassDef().getTitle()</title>
+			<short-title>$table.getClassDef().getTitle()</short-title>
+			<keywords>$table.getClassDef().getTitle()</keywords>
+		</portlet-info>
+		<!-- Portlet preferences (configurable by user in portlet EDIT mode) -->
+		<portlet-preferences>
+			<preference>
+				<name>rows-per-page</name>
+				<value>20</value>
+			</preference>
+			<preference>
+				<name>date-format</name>
+				<value>yyyy/MM/dd</value>
+			</preference>
+			<preference>
+				<name>datetime-format</name>
+				<value>yyyy/MM/dd hh:mm</value>
+			</preference>
+		</portlet-preferences>		
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($table.getClassDef().getName() == $detailfile.getDetailFileClassName())
+		<supported-processing-event>
+                    <qname xmlns:x="http://liferay.com/events">x:${tabledetail.getClassDef().getName()}.${detailfile.getConnectionFieldName()}</qname>
+		</supported-processing-event>
+#end
+#end
+#end
+#foreach($detailfile in $table.getDetailFiles().getDetailFileArray())
+		<supported-publishing-event>
+                    <qname xmlns:x="http://liferay.com/events">x:${table.getClassDef().getName()}.${detailfile.getConnectionFieldName()}</qname>
+		</supported-publishing-event>
+#end
+
+	</portlet>
+#end
+#end
+#foreach($table in $applications)
+#foreach($detailfile in $table.getDetailFiles().getDetailFileArray())
+	<event-definition>
+		<qname xmlns:x="http://liferay.com/events">x:${table.getClassDef().getName()}.${detailfile.getConnectionFieldName()}</qname>
+		<value-type>java.lang.String</value-type>
+	</event-definition>
+#end
+#end
+
+</portlet-app>

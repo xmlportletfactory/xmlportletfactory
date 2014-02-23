@@ -1,0 +1,58 @@
+10
+
+dir
+512
+svn+ssh://svn.code.sf.net/p/xmlportlet/code/trunk/Resources
+svn+ssh://svn.code.sf.net/p/xmlportlet/code
+
+
+
+2014-01-19T16:55:19.263595Z
+512
+juangon
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+849cc71a-e405-4064-8904-ecb71b08fc0e
+
+VelocityTemplates_6.2
+dir
+
+sdk_files
+dir
+
+Doc
+dir
+
+VelocityTemplates_common
+dir
+
+VelocityTemplates
+dir
+
+cfg
+dir
+
+PortletStructureAndFiles
+dir
+
+VelocityTemplates_6.0
+dir
+
+xml
+dir
+
+VelocityTemplates_6.1
+dir
+

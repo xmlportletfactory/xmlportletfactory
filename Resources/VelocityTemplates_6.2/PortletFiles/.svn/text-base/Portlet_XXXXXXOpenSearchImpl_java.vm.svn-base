@@ -1,0 +1,41 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/${pathBase}/${commonData.getClient().toLowerCase()}/${commonData.getProjectName().toLowerCase()}/util" )
+#set( $createName = "/${classDef_name}OpenSearchImpl.java" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_java.txt")
+package ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.util;
+
+import com.liferay.portal.kernel.search.HitsOpenSearchImpl;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
+
+/**
+ * @author Juan G.
+ */
+public class ${classDef_name}OpenSearchImpl extends HitsOpenSearchImpl {
+
+	public static final String SEARCH_PATH = "/c/${classDef_name}/open_search";
+
+	public static final String TITLE = "${classDef_name} Search: ";
+
+	@Override
+	public Indexer getIndexer() {
+		return IndexerRegistryUtil.getIndexer(${classDef_name}.class);
+	}
+
+	@Override
+	public String getPortletId() {
+		return "${classDef_name}";
+	}
+
+	@Override
+	public String getSearchPath() {
+		return SEARCH_PATH;
+	}
+
+	@Override
+	public String getTitle(String keywords) {
+		return TITLE + keywords;
+	}
+
+}

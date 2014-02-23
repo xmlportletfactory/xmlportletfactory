@@ -1,0 +1,96 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/WEB-INF/src/content" )
+#set( $createName = "/Language_fi.properties" )
+#
+#  Portlet language localization messages (by Henri Leisma)
+#
+#foreach($table in $applications)
+#set ($fields = $table.getFileDef().getFields().getFieldArray())
+
+#
+# Portlet ${table.getClassDef().getTitle()} Operations messages
+#
+${table.getFileDef().getName().toLowerCase()}-operate-successfully=Toiminto suoritettiin onnistuneesti
+${table.getFileDef().getName().toLowerCase()}-add=Lis\u00e4\u00e4 ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-added-successfully=${table.getClassDef().getTitle()} lis\u00e4ttiin onnistuneesti
+${table.getFileDef().getName().toLowerCase()}-deleted-successfully=${table.getClassDef().getTitle()} poistettiin onnistuneesti
+${table.getFileDef().getName().toLowerCase()}-error-deleting=Kohdattiin virheit\u00e4 poistettaessa ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-updated-successfully=${table.getClassDef().getTitle()} p\u00e4ivitettiin onnistuneesti
+${table.getFileDef().getName().toLowerCase()}-empty-results-message=Ei n\u00e4ytett\u00e4vi\u00e4 tuloksia ${table.getClassDef().getTitle()} tietueista.
+${table.getFileDef().getName().toLowerCase()}-help=T\u00e4m\u00e4 portlet sallii k\u00e4ytt\u00e4jien katsella, lis\u00e4t\u00e4, muokata ja poistaa ${table.getClassDef().getTitle()} tietueita j\u00e4rjestelm\u00e4st\u00e4.
+
+#
+# Portlet ${table.getClassDef().getTitle()} Field Operations messages
+#
+#foreach($field in $fields)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}=${field.getTitle()}
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required=${field.getTitle()} on pakollinen tieto.
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="int" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="float" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="double" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="numeric")
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required-number=${field.getTitle()} tulee olla numero.
+#end
+#if(${field.getRegexpType().xmlText().isEmpty()} == false)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-regexp-no-match=${field.getTitle()} sis\u00e4lt\u00f6 v\u00e4\u00e4r\u00e4ss\u00e4 muodossa.
+#end
+#end
+
+#
+# Portlet ${table.getClassDef().getTitle()} Miscellaneous messages
+#
+action.ADD_${table.getClassDef().getName().toUpperCase()}=Lis\u00e4\u00e4 ${table.getClassDef().getTitle()}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#end
+
+#
+# Preferences messages
+#
+rows-per-page=Rivej\u00e4 per sivu
+rows-per-page-required=Rivej\u00e4 per sivu on pakollinen tieto
+rows-per-page-invalid=Rivej\u00e4 per sivu arvo ei kelpaa
+date-format=P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4n muoto
+date-format-required=P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4n muoto on pakollinen tieto
+date-format-error=P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4n muoto virheellinen
+datetime-format=Kellonajan muoto
+datetime-format-required=Kellonajan muoto on pakollinen tieto
+datetime-format-error=Kellonajan muoto virheellinen
+prefs-success=Asetusten tallentaminen onnistui
+prefs-tab1=Asetukset
+prefs-tab2=Vie
+prefs-tab3=Tuo
+prefs-export=Vie Excel-tiedostoon
+prefs-export-message1=T\u00e4st\u00e4 luodaan Excel-taulukko kaikista taulukon kentist\u00e4.
+prefs-export-message2=Jos kyseess\u00e4 validointi-kent\u00e4t, n\u00e4ytet\u00e4\u00e4n niihin liittyv\u00e4t kuvaukset.
+prefs-export-message3=Dokumenttien ja kuvien kentist\u00e4 n\u00e4ytet\u00e4\u00e4n vain nimi.
+prefs-import-message=Ty\u00f6 k\u00e4ynniss\u00e4.
+prefs-export-sample=Vie Excel n\u00e4yte
+prefs-import=Tuo Excel-tiedostosta
+prefs-view-type=N\u00e4ytt\u00f6tyyppi
+prefs-view-type-default=Oletus
+prefs-view-type-user=N\u00e4yt\u00e4 k\u00e4ytt\u00e4j\u00e4n assetit
+
+combo-select=Valitse
+category.${commonData.getProjectName()}=${commonData.getProjectName()}
+boolean-true=Kyll\u00e4
+boolean-false=Ei
+submit=L\u00e4het\u00e4
+cancel=Peruuta
+filter=Suodata
+delete-field=Poista
+dependent-rows-exist-error-deleting=Ei voitu poistaa is\u00e4nt\u00e4rivi\u00e4. Poista siit\u00e4 riippuvaiset rivit ensin.
+confirm-delete=Haluatko varmasti poistaa t\u00e4m\u00e4n rivin? My\u00f6s kaikki t\u00e4st\u00e4 riippuvaiset tarkentavat rivit poistetaan.
+
+#
+# Validator errors
+#
+email_error=S\u00e4hk\u00f6postiosoite ei kelpaa.<br>(Esimerkki: user@domain.com)
+ip_error=IP-osoite ei kelpaa. (Esimerkki: 192.168.1.2)
+integer_regexp_error=Kokonaisluku ei kelpaa.<br>(Esimerkki: 280)
+float_regexp_error=Desimaaliluku ei kelpaa.<br>(Esimerkki: 280.8)
+error_number_format=Numerotieto v\u00e4\u00e4r\u00e4ss\u00e4 muodossa.
+url_error=Url ei kelpaa.<br>(Esimerkki: http://www.google.es)
+zipspain_error=Postinumero ei kelpaa.<br>(Esimerkki: 03801)
+nifspain_error=Nif ei kelpaa.<br>(Esimerkki: 21667876Q)
+phonespain_error=phonespain_error.<br>(Esimerkki: 99999999)
+zero_to_ten_error=Arvon tulee olla numero 0 ja 10 v\u00e4lilt\u00e4.<br>(Esimerkki: 5)

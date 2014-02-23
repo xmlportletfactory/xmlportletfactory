@@ -1,0 +1,8 @@
+#parse("/Resources/VelocityTemplates_common/PortletFiles/variables.txt")
+#set( $createPath = "/docroot/css" )
+#set( $createName = "/Portlet_${classDef_name}.css" )
+#include("/Resources/VelocityTemplates_common/PortletFiles/license_css.txt")
+#${file_name}FilterForm {
+	float: right;
+	padding-bottom: 7px;
+}

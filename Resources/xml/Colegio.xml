@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definition xmlns="http://www.xmlportletfactory.org/xml/xmlportletfactory" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.xmlportletfactory.org/xml/xmlportletfactory xmlportletfactory.xsd">
+    <commonData>
+        <projectName>cole</projectName>
+        <bbddApplicationsData>
+            <driver>com.mysql.jdbc.Driver</driver>
+            <url>jdbc:mysql://localhost/lf_604?useUnicode=true</url>
+            <username>root</username>
+            <password></password>
+            <maxactive>20</maxactive>
+            <poolable>true</poolable>
+        </bbddApplicationsData>
+        <client>Alicante</client>
+    </commonData>
+    <applications>
+    <!-- Clases -->
+        <application>
+            <classDef>
+                <name>ColeClases</name>
+                <title>Mantenimiento de Clases</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>coleclases</name>
+                <fields>
+                    <field>
+                        <name>claseId</name>
+                        <title>Codigo de Clase</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>claseNombre</name>
+                        <title>Nombre de la Clase</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>claseInicio</name>
+                        <title>Fecha Inicio Curso</title>
+                        <type>
+                            <date></date>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>claseAlumnos</name>
+                        <title>Alumnos en la Clase</title>
+                        <type>
+                            <int>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <zerofill>true</zerofill>
+                                <nullable>false</nullable>
+                            </int>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>alumnoFoto</name>
+                        <title>Foto</title>
+                        <type>
+                            <image></image>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+            <detailFiles>
+                    <detailFile>
+                            <detailFileClassName>ColeAlumnos</detailFileClassName>
+                            <connectionFieldName>claseId</connectionFieldName>
+                            <connectionTitle>Alumnos</connectionTitle>
+                    </detailFile>
+            </detailFiles>
+        </application>
+    <!-- Alumnos -->
+        <application>
+            <classDef>
+                <name>ColeAlumnos</name>
+                <title>Mantenimiento de Alumnos</title>
+                <mode>
+                    <add>true</add>
+                    <delete>true</delete>
+                    <modify>true</modify>
+                    <browse>true</browse>
+                </mode>
+            </classDef>
+            <fileDef>
+                <name>colealumnos</name>
+                <fields>
+                    <field>
+                        <name>alumnoId</name>
+                        <title>Codigo de Alumno</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>claseId</name>
+                        <title>Codigo de Clase</title>
+                        <type>
+                            <long>
+                                <length>5</length>
+                                <signed>false</signed>
+                                <nullable>false</nullable>
+                            </long>
+                        </type>
+                        <showFieldInView>false</showFieldInView>
+                    </field>
+                    <field>
+                        <name>alumnoNombre</name>
+                        <title>Nombre del Alumno</title>
+                        <type>
+                            <varchar>
+                                <length>40</length>
+                            </varchar>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                    <field>
+                        <name>alumnoBeca</name>
+                        <title>Becado</title>
+                        <type>
+                            <boolean></boolean>
+                        </type>
+                        <showFieldInView>true</showFieldInView>
+                    </field>
+                </fields>
+                <autoKey>true</autoKey>
+                <poolable>true</poolable>
+            </fileDef>
+        </application>
+    </applications>
+</definition>

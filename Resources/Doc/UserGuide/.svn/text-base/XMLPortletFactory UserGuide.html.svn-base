@@ -1,0 +1,604 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="ReText 3.1.2">
+  <title>XMLPortletFactoryUserGuide</title>
+</head>
+<body>
+<h1>XMLPortletFactory User Guide</h1>
+<h2>Preface</h2>
+<blockquote>
+<p>www.XMLPortletFactory.org<br>
+Jack A. Rider<br>
+XMLPortletFactory Getting Started Guide<br>
+By Jack A. Rider<br>
+Copyright © 2009 - 2012 by Jack A. Rider</p>
+</blockquote>
+<p>This work is offered under the Creative Commons Attribution-Share Alike Unported license. You are free:</p>
+<ul>
+<li>to share—to copy, distribute, and transmit the work</li>
+<li>to remix—to adapt the work</li>
+</ul>
+<p>Under the following conditions:<br>
+</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="Commons" src="images/image-000.png"></td>
+<td>Attribution. You must attribute the work in the manner specified by the author or licensor (but not in any way that suggests that they endorse you or your use of the work).</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><img alt="Commons" src="images/image-001.png"></td>
+<td>Share Alike. If you alter, transform, or build upon this work, you may distribute the resulting work only under the same, similar or a compatible license.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>You may view the full version of this license online here:<br>
+<a href="http://creativecommons.org/licenses/by-sa/3.0">http://creativecommons.org/licenses/by-sa/3.0</a></p>
+<p>Contributors:
+David Segui, Fran García, Moisés Belda.</p>
+<h2 style="page-break-before: always">Table of Contents</h2>
+
+<ul>
+<li>Preface</li>
+<li>Introduction<ul>
+<li>What is XMLPortletFactory?</li>
+<li>In which versions of Liferay runs?</li>
+</ul>
+</li>
+<li>Initial Setup<ul>
+<li>Pre-requisites</li>
+<li>Download</li>
+<li>Install XMLPortletFactory in Liferay SDK</li>
+<li>First run</li>
+</ul>
+</li>
+<li>XMLPortletFactory in detail<ul>
+<li>Must know before</li>
+<li>Node by node explanation</li>
+</ul>
+</li>
+<li>How-to<ul>
+<li>Eclipse edit, your generated portlet<ul>
+<li>Prerequisites</li>
+<li>Steps</li>
+</ul>
+</li>
+<li>How to I18n, change or add new languages<ul>
+<li>Prerequisites</li>
+<li>Steps</li>
+<li>Results</li>
+</ul>
+</li>
+<li>How to add new regexp validations to my portlets.<ul>
+<li>Prerequisites</li>
+<li>Steps</li>
+<li>Results</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 style="page-break-before: always">Introduction</h2>
+
+<h3>What is XMLPortletFactory?</h3>
+<p>XMLPortletFactory is a project whose goal is the fast and easy generation of portlets, which give support and maintenance to tables in a database, always under Liferay portal infrastructure.</p>
+<p>Experience in the programming world, shows that a big percentage of projects; portlets are fundamentally database table maintenance, just adding, editing and deleting rows in tables. Under that circumstances, we spend a lot of time, coding same routines with different table name and fields, is like Groundhog Day in the office again.</p>
+<p>Now XMLPortletFactory can generate full, professional-looking portlets within minutes of starting, just have to define one xml file, which contains the applications definition. With it you can generate portlets for the different Liferay portal versions (6.0.1, 6.0.2.....6.0.6...and so on). If you have de xml definition, your portlet for your version is seconds away. Can you imagine your time saving, in portal version upgrades?</p>
+<h3>In which versions of Liferay runs?</h3>
+<p>Actually, is tested and found to be generating working portlets in 6.0.x.  Whenever 6.1.x comes out, I will try to modify the actual process to select appropriate major Liferay version 6.0 or 6.1 with the same xml files.</p>
+<h2>Initial Setup</h2>
+<h3>Pre-requisites</h3>
+<p>We first need Liferay Plugins SDK (6.0.x) installed and working (java, ant, etc.), the Liferay people made it as easy as unzipping a file and editing a file.  See instructions here:</p>
+<p><a href="http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/the-plugins-sdk">http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/the-plugins-sdk</a></p>
+<h3>Download</h3>
+<p>You can download the XMLPortletFactory.zip SDK from here:</p>
+<p><a href="http://sourceforge.net/projects/xmlportlet/files">http://sourceforge.net/projects/xmlportlet/files</a></p>
+<h3>Install XMLPortletFactory in Liferay SDK</h3>
+<p>If you have a Liferay plugin SDK, installed and working, you should have somewhere a directory that looks like this:</p>
+<p><img alt="Figure 1" src="images/image-002.jpg"> </p>
+<p>Installing XMLPortletFactory is just unzipping the file “XMLPortletFactory.zip” under XMLPortletFactory directory resulting in this:</p>
+<p><img alt="Figure 2" src="images/image-003.jpg"> </p>
+<p>That’s it!!!, XMLPortletFactory is installed in your Liferay plugins SDK.</p>
+<h3>First run</h3>
+<p>We are going to create our first portlet, and for that, we can use the same easy and convenient way, Liferay SDK uses for its own plugins. That is, from inside XMLPortletFactory folder, execute the “create” line command passing a name parameter and a description enclosed with quotes. Like this.</p>
+<p>On Windows:</p>
+<blockquote>
+<blockquote>
+<p><strong>create.bat example “Here is an example”</strong></p>
+</blockquote>
+</blockquote>
+<p>On Linux:</p>
+<blockquote>
+<blockquote>
+<p><strong>./create.sh  example “Here is an example”</strong></p>
+</blockquote>
+</blockquote>
+<p>Note : On Linux, remember to give execute permission to “create.sh”.</p>
+<p>This results in the creation of a folder, named “example-xmlportletfactory” containing a build file and a small, starting point XMLPortletFactory file definition, named “example.xml”:</p>
+<p><img alt="Figure 3" src="images/image-004.jpg"> </p>
+<p>This example.xml definition just contains the data for a portlet called “example” that maintains a file with the fields “exampleId” and “exampleDescription”, and is generated here, just to be a starting point. You can edit it to suit your needs following specifications in chapter “XMLPortletFactory in detail”.</p>
+<p>We now have an xml file, that conforms specifications (see ./Resources/xml/xmlportletfactory.xsd), and we want our portlet.  Just enter folder example-xmlportletfactory and execute ant command.</p>
+<blockquote>
+<blockquote>
+<p><strong>cd example-xmlportletfactory</strong><br>
+<strong>ant</strong></p>
+</blockquote>
+</blockquote>
+<p>What happened? Many things, let me resume:</p>
+<ul>
+<li>Folder example-portlet was created in SDK’s portlet folder.<ul>
+<li>Note: be aware that folder name “example-portlet” comes from xml definition node <code>&lt;projectName&gt;</code> and not from xml file name.</li>
+</ul>
+</li>
+<li>It was populated with all files needed.</li>
+<li>Ant build-service was executed to generate Liferay services, persistence, etc.</li>
+<li>Ant deploy was executed to generate portlet war, that now can be found in SDK’s dist folder</li>
+<li>If you had SDK’s portal running, now the portlet is deployed, installed and the tables created.<br>
+</li>
+</ul>
+<p>Just go to “Add” → “more” to install applications, and you will find that we have a new portlet in the list:</p>
+<p><img alt="Figure 4" src="images/image-005.jpg"> </p>
+<p>With it you can insert new table rows by pressing “Add example” button:</p>
+<p><img alt="Figure 5" src="images/image-006.jpg"> </p>
+<p>Pressing the “Submit” button:</p>
+<p><img alt="Figure 6" src="images/image-007.jpg"> </p>
+<p>Pressing the “Actions” button:</p>
+<p><img alt="Figure 7" src="images/image-008.jpg"> </p>
+<p>Pressing the tools button:</p>
+<p><img alt="Figure 8" src="images/image-009.jpg"> </p>
+<p>We have now a very simple portlet, but we can do very sophisticated portlets, like header → detail/s, combo validation of other files, regexp validation of fields, filter/search/order rows, change language, etc. Look for this and more in chapter <strong>“XMLPortletFactory in detail”</strong>.</p>
+<h2>XMLPortletFactory in detail</h2>
+<h3>Must know before</h3>
+<h3>Node by node explanation</h3>
+<p>Xml file definition is supposed to contain all data needed to generate everything in the portlet. The file starts with the tags <code>&lt;definition&gt;</code> that have 2 required children <code>&lt;commonData&gt;</code> and <code>&lt;applications&gt;</code>.<br>
+</p>
+<p><img alt="Figure 9" src="images/image-010.jpg"></p>
+<p><img alt="Figure 10" src="images/image-011.jpg"></p>
+<p><font color="blue"><code>&lt;commonData&gt;</code></font></p>
+<ul>
+<li>contains 3 more required children</li>
+<li>groups common data for all applications (portlets to be generated)<br>
+</li>
+<li>
+<p><font color="darkgreen"><code>&lt;client&gt;</code></font></p>
+<ul>
+<li>Is aimed to contain the client name, for this     project, as one client can have many projects.</li>
+<li>[A-Za-z0-9]</li>
+<li>Required: true.</li>
+<li>This name will be used (lower case) in generated java package, like:<blockquote>
+<p>org.xmlportletfactory.portal.<code>&lt;client /&gt;</code></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="darkgreen"><code>&lt;projectName&gt;</code></font></p>
+<ul>
+<li>The project name.</li>
+<li>[A-Za-z]</li>
+<li>Required: true.</li>
+<li>This name will be used for portlet class name and in category for liferay-display.xml<blockquote>
+<p>In portlet name “<code>&lt;projectName /&gt;</code>”-portlet</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="darkgreen"><code>&lt;version&gt;</code></font></p>
+<ul>
+<li>Version number of <code>&lt;projectName&gt;</code></li>
+<li>Required: false. If omitted defaults to 1</li>
+<li>Field used in:<blockquote>
+<p>File “liferay-plugin-package.properties” module-incremental-version variable</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="red"><strong><code>&lt;bbddApplicationsData&gt;</code></strong></font> - deprecated / not in use<br>
+</p>
+</li>
+</ul>
+<p><img alt="Figure 11" src="images/image-012.jpg"></p>
+<p><font color="blue"><code>&lt;applications&gt;</code></font></p>
+<ul>
+<li>Just the container of nodes type <code>&lt;application&gt;</code></li>
+<li>1 to 255 applications in one xml.</li>
+<li>
+<p><font color="darkgreen"><code>&lt;application&gt;</code></font></p>
+<ul>
+<li>Each application will correspond to one portlet generated</li>
+<li>Each application will correspond to one table in the BBDD</li>
+<li>Contains 3 children nodes, classDef, fileDef and optional detailFiles.</li>
+</ul>
+<p><img alt="Figure 12" src="images/image-013.jpg"></p>
+<ul>
+<li>
+<p><font color="purple"><code>&lt;classDef&gt;</code></font></p>
+<ul>
+<li>Contains 4 children nodes, title, mode, generatePortlet and restrictedBy.</li>
+<li>
+<p><font color="brown"><code>&lt;name&gt;</code></font></p>
+<ul>
+<li>Used to reference this portlet everywere.</li>
+<li>Also known in velocity files as “file_name” and “class_name”</li>
+<li>[A-Za-z0-9]</li>
+<li>Required: true.</li>
+</ul>
+</li>
+<li>
+<p><font color="brown"><code>&lt;title&gt;</code></font></p>
+<ul>
+<li>Actually only used for documentation and readibility.</li>
+<li>Required: true.</li>
+</ul>
+<p><img alt="Figure 13" src="images/image-014.jpg"></p>
+</li>
+<li>
+<p><font color="brown"><code>&lt;mode&gt;</code></font></p>
+<ul>
+<li>Defines if the portlet can or can’t insert, delete, modify, or browse records of de bbdd.</li>
+<li>All options true by default.</li>
+<li>Required: false.</li>
+</ul>
+</li>
+<li>
+<p><font color="brown"><code>&lt;generatePortlet&gt;</code></font></p>
+<ul>
+<li>True or false, to define if a portlet is to be generated. If false, it will only generate classes to access BBDD table, and include them in the .jar.</li>
+</ul>
+<p><img alt="Figure 14" src="images/image-015.jpg"></p>
+</li>
+<li>
+<p><font color="brown"><code>&lt;restrictedBy&gt;</code></font></p>
+<ul>
+<li>Very usefull feature that restrict access to BBDD depending or the companyId, groupId or userId of the user that adds a row.</li>
+<li>If is companyId restricted, all users with the same companyId, will see all rows inserted from that company.</li>
+<li>If is groupId restricted, only users with the same groupId, will see rows inserted by them.</li>
+<li>Finally if userId restricted, each user will only see rows inserted by themselves.</li>
+<li>This feature can be achieved because, XMLPortletFactory always creates DDBB tables including companyId, groupId and userId fields, and silently populates the current user values at insertion time.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Figure 15" src="images/image-016.jpg"></p>
+<ul>
+<li>
+<p><font color="purple"><code>&lt;fileDef&gt;</code></font></p>
+<ul>
+<li>
+<p>Contains all data referred to each field of the table.</p>
+</li>
+<li>
+<p><font color="brown"><code>&lt;name&gt;</code></font></p>
+<ul>
+<li>The name of the table in the bbdd. Be aware that table name will be prefixed with the project name.</li>
+<li>[a-z]{1}[a-zA-Z0-9]*</li>
+<li>Required: true.</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Figure 16" src="images/image-017.jpg"></p>
+<ul>
+<li>
+<p><font color="green"><code>&lt;fields&gt;</code></font></p>
+<ul>
+<li>Set of <code>&lt;field&gt;</code> nodes.</li>
+<li>
+<p>IMPORTANT: First <code>&lt;field&gt;</code> is always the primary key of the table.</p>
+</li>
+<li>
+<p><font color="blue"><code>&lt;field&gt;</code></font></p>
+<ul>
+<li>
+<p><font color="orange"><code>&lt;name&gt;</code></font></p>
+<ul>
+<li>Name of the field in the table.</li>
+<li>[a-zA-Z0-9]*</li>
+<li>Required: true.</li>
+</ul>
+</li>
+<li>
+<p><font color="orange"><code>&lt;title&gt;</code></font></p>
+<ul>
+<li>String used in jsp to ask for field value in edition mode or column name in search containers for view mode.</li>
+<li>Also populated to language_xx.properties files for user modification in I18n.</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Figure 17" src="images/image-018.jpg"></p>
+<ul>
+<li>
+<p><font color="orange"><code>&lt;type&gt;</code></font></p>
+<ul>
+<li>Here you select which type of field is going to be from the ones showed in the image above.</li>
+<li>Int, long, numeric, float and varchar, admit <code>&lt;regexp&gt;</code> function. That means that you can control the data values admitted.</li>
+<li>The <code>&lt;regexp&gt;</code> tag values are defined in file “regexp.properties” and actually includes, email, ip, url, zipspain, nifspain, phonespain, etc.</li>
+<li>Int, long, numeric, float, date, datetime and varchar types admit <code>&lt;order&gt;</code> function. That means that the columns with order value true, in search container of the portlet view mode, will be orderable with a click.</li>
+<li>The <code>&lt;order&gt;</code> tag defaults to false.</li>
+<li>Int, long, numeric, float and varchar types admit the <code>&lt;lenght&gt;</code> clause. That means that you control de length of the field.</li>
+<li>Varchar type, admits a special clause <code>&lt;filter&gt;</code>, that when is true, automatically generates a search/filter field in the portlet view mode, that permits filtering of rows field values, with this clause.</li>
+<li>The <code>&lt;type&gt;</code> tag is probably the most complex node of all, see examples provided to get a more exact point of view.</li>
+<li>The <code>&lt;text&gt;</code> tag creates a text box.</li>
+<li>The <code>&lt;boolean&gt;</code> tag creates a radio button</li>
+<li>The <code>&lt;image&gt;</code> tag creates a complete infrastructure to upload images, which internally are stored in Liferays Image Gallery.</li>
+<li>The <code>&lt;document&gt;</code> tag creates a complete infrastructure to upload documents that internally are stored in Liferays Document Library.</li>
+<li>Incredible but true.</li>
+</ul>
+</li>
+<li>
+<p><font color="orange"><code>&lt;showFieldInView&gt;</code></font></p>
+<ul>
+<li>True or false, depending if we want the field value to be shown in portlet view mode, as a search container column.</li>
+<li>If we have many fields in the table, we usually don’t want to show all of them as columns, in view mode, because of width overflow. So we just put as true the most important ones.</li>
+<li>At least one.</li>
+</ul>
+</li>
+<li>
+<p><font color="orange"><code>&lt;required&gt;</code></font></p>
+<ul>
+<li>Used to make sure, a field value is obtained when inserting a row.                         * Fields required, are marked with an asterisk in portlet edit mode.</li>
+<li>It defaults to false</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Figure 18" src="images/image-019.jpg"></p>
+<ul>
+<li>
+<p><font color="orange"><code>&lt;validation&gt;</code></font></p>
+<ul>
+<li>Used to validate input against other BBDD table row.</li>
+<li>It generates a combo, with values from other table.                  <br>
+</li>
+<li>
+<p><font color="purple"><code>&lt;className&gt;</code></font></p>
+<ul>
+<li>Existing <code>&lt;className&gt;</code> from other <code>&lt;application&gt;</code> of this xml.</li>
+</ul>
+</li>
+<li>
+<p><font color="purple"><code>&lt;fieldName&gt;</code></font></p>
+<ul>
+<li>Existing <code>&lt;fieldName&gt;</code> of <code>&lt;application&gt;</code> referenced by previous <code>&lt;className&gt;</code>.</li>
+<li>This field is the one used to match, for validation, so it should be of the same type. For example, if we are asking for the telephoneTypeId of a client, we would use the <code>&lt;fieldName&gt;</code> “telephoneTypeId” from the telephoneTypes class.</li>
+</ul>
+</li>
+<li>
+<p><font color="purple"><code>&lt;orderByField&gt;</code></font></p>
+<ul>
+<li>Is the descriptive field of the validation application, to show in the combo box.</li>
+<li>Following the previous example, would by the “telephoneTypeDescription” field.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="red"><strong><code>&lt;autoKey&gt;</code></strong></font> -&gt; deprecated / not in use</p>
+</li>
+<li><font color="red"><strong><code>&lt;poolable&gt;</code></strong></font> -&gt; deprecated / not in use</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Figure 19" src="images/image-020.jpg"></p>
+<ul>
+<li>
+<p><font color="purple"><code>&lt;detailFiles&gt;</code></font></p>
+<ul>
+<li>
+<p>You can define a list up to 255  detailFiles, for each application.</p>
+</li>
+<li>
+<p><font color="brown"><code>&lt;detailFile&gt;</code></font></p>
+<ul>
+<li>Is an application reference whose records/rows depend on the ones defined in the current application, which can be zero to many. For example, telephone numbers of a company, or lines in an invoice, etc.</li>
+<li>
+<p>You can have many detail files to one header, and even, detail files of detail files. But for all this to work, portlets have to be installed in the same page because, their view is refreshed via portlet intercommunication processes. Be aware of this.</p>
+</li>
+<li>
+<p><font color="green"><code>&lt;detailFileClassName&gt;</code></font></p>
+<ul>
+<li>Just the class name of the application that should exist within this xml.</li>
+</ul>
+</li>
+<li>
+<p><font color="green"><code>&lt;connectionFieldName&gt;</code></font></p>
+<ul>
+<li>The field name used to connect the header to the detail application.</li>
+<li>IMPORTANT: actually, this should be field #2 of the detail file. </li>
+<li>In an invoice header - invoice lines example, would be</li>
+<li>Invoice Header fields:<ul>
+<li>InvoiceID</li>
+<li>InvoiceDate</li>
+<li>Invoice..etc.</li>
+</ul>
+</li>
+<li>Invoice Lines fields:<ul>
+<li>InvoiceLineId</li>
+<li>InvoiceId - field #2 of Invoice Lines.</li>
+<li>InvoiceLineArticleId</li>
+<li>InvoiceLine....Etc</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="green"><code>&lt;connectionTitle&gt;</code></font></p>
+<ul>
+<li>Just to describe the detailFile relationship, could be something like “Invoice Lines”</li>
+<li>Required: false.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><font color="red"><strong><code>&lt;bbddFileData&gt;</code></strong></font> - deprecated / not in use.</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>How-to</h2>
+<p>Here will relate different possibilities of how to make XMLPortletFactory your favourite tool to generate portlets. Actually most of the generation is based in velocity templates that are very easy to edit. </p>
+<h3>Eclipse edit, your generated portlet</h3>
+<p>So you are a portlet developer and want to twist the generated portlet to meet your needs, well that is going to be ease, first remember to have prerequisites controlled:</p>
+<h4>Prerequisites</h4>
+<ul>
+<li>
+<p>Liferay plugins SDK installed and working
+http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/the-plugins-sdk</p>
+</li>
+<li>
+<p>XMLPortletFactory installed and working in Liferay plugins SDK
+http://sourceforge.net/projects/xmlportlet/files/
+A portlet already generated, (see “First Run” chapter)
+We are going to use same example here (the “example-portlet”)</p>
+</li>
+<li>
+<p>Eclipse Java EE IDE for web developers, installed and working.
+http://www.eclipse.org/
+Tested on version Helios Service Release 2.
+Liferay IDE tools 1.2.3v2011 installed.
+http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/liferay-i-2</p>
+</li>
+</ul>
+<h4>Steps</h4>
+<ol>
+<li>Start eclipse</li>
+<li>
+<p>On the Navigator or Package Explorer right button -&gt; import -&gt; Liferay Plugin SDK Projects</p>
+<p><img alt="Figure 20" src="images/image-021.jpg"></p>
+</li>
+<li>
+<p>Next Button, select your Plugins SDK, the example-portlet, and your target runtime</p>
+<p><img alt="Figure 21" src="images/image-022.jpg"></p>
+</li>
+<li>
+<p>That’s it, you are ready to go, you have the full portlet with sources at your disposal in your favourite IDE. It should look something like this:</p>
+<p><img alt="Figure 22" src="images/image-023.jpg"></p>
+<p>Have fun.</p>
+</li>
+</ol>
+<p>More information about importing existing projects into Liferay IDE here:</p>
+<p>http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/importing-existing-projects-into-liferay-ide</p>
+<h3>How to I18n, change or add new languages</h3>
+<p>So you already generated a few portlets and need to add new language templates or change something in the actual ones.  As you already notice portlet generation contemplates “en”, and “es” languages, if you develop a template for other language, feel free to send a copy to me, I will include it in the next version.</p>
+<h4>Prerequisites</h4>
+<ul>
+<li>
+<p>Liferay plugins SDK installed and working
+http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/the-plugins-sdk</p>
+</li>
+<li>
+<p>XMLPortletFactory installed and working in Liferay plugins SDK
+http://sourceforge.net/projects/xmlportlet/files/
+A portlet already generated, (see “First Run” chapter)
+We are going to use same example here (the “example-portlet”)</p>
+</li>
+</ul>
+<h4>Steps</h4>
+<p>In the first run of XMLPortletFactory, two folders where automatically created, that were, lib and Resources. Under resources, you will find many files used in the generation of the portlet. We are going to talk about the ones that control I18n.</p>
+<ol>
+<li>Go to XMLPortletFactory / Resources / Velocity Templates / PortletFiles folder.</li>
+<li>If you just want to change something already exists just edit corresponding “Portlet_Language_??_properties.vm” file to suit your needs.</li>
+<li>In case you want to create a new language template copy “Portlet_Language_properties.vm” to “Portlet_Language_<code>&lt;your lang here&gt;</code>_properties.vm”</li>
+<li>Change line 4 to meet your lang so corresponding new file will be generated<blockquote>
+<p>a) #set( $createName = "/Language_<code>&lt;your lang here&gt;</code>.properties" )<br>
+b) Change rest of lines ALLWAYS at the right side of the “=” sign.<br>
+c) Don’t touch velocity variables enclosed like this: ${xxxxxxx} they are values substituted at generation time.<br>
+d) Don’t touch lines starting with the “#” sign; they are velocity commands or file comments.<br>
+e) If you have doubts compare English and Spanish files, it clears a lot to compare them.</p>
+</blockquote>
+</li>
+<li>Now generate again<blockquote>
+<p>a) Cd to your “portlet”-xmlportletfactory<br>
+b) Ant</p>
+</blockquote>
+</li>
+</ol>
+<h4>Results</h4>
+<p>You now are supposed to have a new language_xx.properties file in your newly generated portlet, and in every portlet you generate from this XMLPortletFactory SDK.</p>
+<p>Remember to backup a copy of the file. </p>
+<p>Have fun.</p>
+<h3>How to add new regexp validations to my portlets.</h3>
+<p>As you already noticed, regexp validation can be made to almost all field types with ease, but I see you want more possibilities. You can achieve this in very few steps.</p>
+<h4>Prerequisites</h4>
+<ul>
+<li>
+<p>Liferay plugins SDK installed and working
+http://www.liferay.com/documentation/liferay-portal/6.0/development/-/ai/the-plugins-sdk</p>
+</li>
+<li>
+<p>XMLPortletFactory installed and working in Liferay plugins SDK
+http://sourceforge.net/projects/xmlportlet/files/
+A portlet already generated, (see “First Run” chapter)
+We are going to use same example here (the “example-portlet”)
+Regexp knowledge
+http://en.wikipedia.org/wiki/Regular_expression</p>
+</li>
+</ul>
+<h4>Steps</h4>
+<p>In the first run of XMLPortletFactory, two folders where automatically created, that were, lib and Resources. Under resources, you will find many files used in the generation of the portlet. We are going to talk about the ones that control regexp validations. </p>
+<ol>
+<li>Go to XMLPortletFactory / Resources / PortletStructureAndFiles / docroot / WEB-INF / src folder.</li>
+<li>
+<p>Edit regexp.properties file</p>
+<p>#<br>
+# XMLPortletFactory regular expression validation types<br>
+#<br>
+<code>float_regexp=[-+]?[0-9]*\.?[0-9]+$</code><br>
+<code>integer_regexp=^[-+]?[0-9]+[0-9]*$</code><br>
+<code>email=^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$</code><br>
+<code>email_error=email_error</code>    <br>
+<code>ip=^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|    2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$</code><br>
+<code>url=^(ht|f)tp(s?)\:\/\/[0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*(:(0-9)*)*(\/?)( [a-zA-Z0-9\-\.\?\,\'\/\\\+&amp;amp;%\$#_]*)?$</code><br>
+<code>url_error=url_error</code><br>
+<code>zipspain=^([1-9]{2}|[0-9][1-9]|[1-9][0-9])[0-9]{3}$</code>  <br>
+<code>zipspain_error=zipspain_error</code><br>
+<code>nifspain=[0-9]{8}[A-Za-z]</code><br>
+<code>nifspain_error=nifspain_error</code><br>
+<code>phonespain=^[0-9]{2,3}-? ?[0-9]{6,7}$</code><br>
+<code>phonespain_error=phonespain_error</code></p>
+</li>
+<li>
+<p>change or add whatever new regexp expression to the file, just considering the following 2 rules</p>
+</li>
+</ol>
+<blockquote>
+<p>a) Add a “_error” property for each new regexp expression.</p>
+<blockquote>
+<p>i) That is if you put a upper case regexp expression named “uppercase=[A-Z]*” you must create “uppercase_error=uppercase_error”.</p>
+</blockquote>
+<p>b) Add your “???_error” property to your I18n files</p>
+<blockquote>
+<p>i) Something like this: “uppercase_error=Must be upper case leters.”<br>
+ii) See “How to I18n, change or add new languages” for help.<br>
+iii) This way you will receive errors messages whenever you introduce wrong data.</p>
+</blockquote>
+</blockquote>
+<h4>Results</h4>
+<p>You now are supposed to have a new regexp expression that can be used in your xml files, and will be considered in future portlet generations. Remember to backup a copy of the file. </p>
+<p>Have fun. </p>
+</body>
+</html>
