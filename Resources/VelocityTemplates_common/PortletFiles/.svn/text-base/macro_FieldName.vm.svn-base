@@ -1,7 +1,0 @@
-#macro( FieldName $fieldNameElement )
-#set ( $fieldName_i = 0 )
-#foreach ( $fname in $fieldNames )
-#set ( $fieldName_i = $fieldName_i + 1)
-#if ( $fieldName_i == $fieldNameElement)$fname#end
-#end
-#end

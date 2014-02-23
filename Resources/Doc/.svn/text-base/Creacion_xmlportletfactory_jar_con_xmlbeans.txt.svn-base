@@ -1,6 +1,0 @@
-para crear el fichero .jar con las clases de acceso al fichero xsd
-se utiliza el programa xmlbeans.
-
-
-C:\xmlbeans-2.4.0\bin>scomp.cmd -compiler "c:\Archivos de programa\Java\jdk1.6.0
-_11\bin\javac.exe" -out xmlportletfactory.jar xmlportletfactory.xsd
