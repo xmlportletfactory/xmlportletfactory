@@ -54,6 +54,10 @@ public class ${classDef_name}AssetRenderer extends BaseAssetRenderer {
 		return _entry.getPrimaryKey();
 	}	
 
+	public String getClassName() {
+		return ${classDef_name}.class.getName();
+	}
+
 	public long getGroupId() {
 		return _entry.getGroupId();
 	}

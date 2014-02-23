@@ -21,8 +21,9 @@
 #end
 #end
 #if($hasDocuments)
-<%@ page import="com.liferay.portlet.documentlibrary.model.DLFileEntry" %>
-<%@ page import="com.liferay.portlet.documentlibrary.service.DLFileEntryLocalServiceUtil" %>
+<%@ page import="com.liferay.portal.kernel.repository.model.FileEntry" %>
+<%@ page import="com.liferay.portal.portletfilerepository.PortletFileRepositoryUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.MimeTypesUtil" %>
 #end
 <%@ page import="com.liferay.portal.kernel.util.StringPool" %>
 <%@ page import="com.liferay.portal.kernel.util.HttpUtil" %>
@@ -37,7 +38,10 @@
 <%@ page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %>
 <%@ page import="com.liferay.portal.model.Group" %>
 <%@ page import="com.liferay.portal.service.GroupLocalServiceUtil" %>
+<%@ page import="com.liferay.portal.service.LayoutLocalServiceUtil"%>
 <%@ page import="com.liferay.portal.util.PortletKeys" %>
+<%@ page import="com.liferay.portal.util.PortalUtil" %>
+<%@ page import="com.liferay.portal.model.GroupConstants" %>
 #end
 
 #set ($richtextFields = [])
@@ -78,14 +82,14 @@
 #foreach($field in $fields)
 #if (${field.isSetValidation()})
 #if (${field.getValidation().isSetDepends()})
-<aui:script>
+<aui:script use="aui-io">
 Liferay.provide(window,
 		'<portlet:namespace />fill${field.getValidation().getClassName()}',
 		function() 
 		{
 			var A = AUI();
-			var comboFilter= document.getElementById("<portlet:namespace />${field.getValidation().getDepends().getLocalFieldName()}"); 
-			var comboTarget = document.getElementById("<portlet:namespace />${field.getName()}"); 
+			var comboFilter= A.one("#<portlet:namespace />${field.getValidation().getDepends().getLocalFieldName()}"); 
+			var comboTarget = A.one("#<portlet:namespace />${field.getName()}"); 
 			var url ='<portlet:resourceURL id="ajaxCallResourceURLFor${field.getValidation().getClassName()}"></portlet:resourceURL>';
 
 			A.io.request(url,
@@ -93,7 +97,7 @@ Liferay.provide(window,
 					//data to be sent to server
 					data: 
 					{
-						<portlet:namespace />param_${field.getValidation().getDepends().getAgainstFieldName()}: comboFilter.options[comboFilter.selectedIndex].value,
+						<portlet:namespace />param_${field.getValidation().getDepends().getAgainstFieldName()}: comboFilter.get("options").item(comboFilter.get('selectedIndex')).getAttribute('value'),
 					},
 					dataType: 'json',
 					on: 
@@ -108,19 +112,14 @@ Liferay.provide(window,
 							var message = instance.get('responseData');
 							if (message) 
 							{
-								var i = comboTarget.length;
-								while (comboTarget.length > 0)
-								{
-								      comboTarget.remove(comboTarget.options[comboTarget.length])                  
-								}
+								comboTarget.get("options").each( function() {
+									this.remove();
+								});		
 								
-								var newOpt1 = comboTarget.appendChild(document.createElement('option'));
-								newOpt1.text = "Please Select";
+								var newOpt1 = comboTarget.append('<option><%= LanguageUtil.get(pageContext, "combo-select") %></option>');
 								for (var i=0; i< message.${field.getValidation().getClassName()}.length; i++)
 								{
-									var newOpt = comboTarget.appendChild(document.createElement('option'));
-									newOpt.value = message.${field.getValidation().getClassName()}[i].${field.getValidation().getFieldName()};
-									newOpt.text = message.${field.getValidation().getClassName()}[i].${field.getValidation().getOrderByField()};
+									comboTarget.append("<option value='" +  message.${field.getValidation().getClassName()}[i].${field.getValidation().getFieldName()} +"'>" + message.${field.getValidation().getClassName()}[i].${field.getValidation().getOrderByField()} + "</option>");
 								}
 							}
 							else 
@@ -130,8 +129,7 @@ Liferay.provide(window,
 						}
 					}
 				}); //END of io Request
-			},
-			['aui-io']
+			}
 		); //End of Provide
 </aui:script>
 #end
@@ -154,10 +152,14 @@ Liferay.provide(window,
 	if (liveGroup.isStaged() && !liveGroup.isStagedRemotely() && !liveGroup.isStagedPortlet(PortletKeys.DOCUMENT_LIBRARY)) {
     	dlScopeGroupId = liveGroup.getGroupId();
 	}
+	
+	Group controlPanelGroup = GroupLocalServiceUtil.getGroup(themeDisplay.getCompanyId(), GroupConstants.CONTROL_PANEL);
+
+	long controlPanelPlid = LayoutLocalServiceUtil.getDefaultPlid(controlPanelGroup.getGroupId(), true);
 %>
 
-<liferay-portlet:renderURL portletName="15" windowState="<%= LiferayWindowState.POP_UP.toString() %>" var="selectDLURL" >
-	<portlet:param name="struts_action" value="/journal/select_document_library" />
+<liferay-portlet:renderURL portletName="166" plid="<%= controlPanelPlid %>" windowState="<%= LiferayWindowState.POP_UP.toString() %>" var="selectDLURL" >
+	<portlet:param name="struts_action" value="/dynamic_data_mapping/select_document_library" />
 	<portlet:param name="groupId" value="<%= String.valueOf(dlScopeGroupId) %>" />
 </liferay-portlet:renderURL>
 #end
@@ -312,23 +314,22 @@ Liferay.provide(window,
 #if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document" || 
 	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
 <% if (${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)()!=0){
-	DLFileEntry ${field.getName()}_doc = DLFileEntryLocalServiceUtil.getDLFileEntry(${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)());
-	String ${field.getName()}_url = themeDisplay.getPortalURL() + themeDisplay.getPathContext() + "/documents/" + ${field.getName()}_doc.getGroupId() + StringPool.SLASH + ${field.getName()}_doc.getFolderId() + StringPool.SLASH + HttpUtil.encodeURL(HtmlUtil.unescape(${field.getName()}_doc.getTitle()));
+	FileEntry ${field.getName()}_doc = PortletFileRepositoryUtil.getPortletFileEntry(${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)());
+	String ${field.getName()}_url = PortletFileRepositoryUtil.getPortletFileEntryURL(themeDisplay, ${field.getName()}_doc, StringPool.BLANK);
 %>
-<%	if (${field.getName()}_doc.getMimeType().toLowerCase().contains("image")) { %>			
-			<aui:a href="<%= ${field.getName()}_url %>" target="_blank"><img alt="" src="/documents/<%= ${field.getName()}_doc.getRepositoryId() %>/<%= ${field.getName()}_doc.getUuid() %>" width="100"><%= ${field.getName()}_doc.getTitle() %></aui:a>
-<% } else { 
-	String url_${field.getName()}_doc="/documents/"+${field.getName()}_doc.getRepositoryId()+"/" + ${field.getName()}_doc.getUuid();
+<%	if (MimeTypesUtil.isWebImage(${field.getName()}_doc.getMimeType())) { %>			
+		<aui:a href="<%= ${field.getName()}_url %>" target="_blank"><img alt="" src="<%= ${field.getName()}_url %>" width="100"><%= ${field.getName()}_doc.getTitle() %></aui:a>
+<%     } else { 
 %>
         	<liferay-ui:icon
         		cssClass="top-link"
         		image='<%= "../file_system/small/" + ${field.getName()}_doc.getIcon() %>'
         		label="<%= true %>"
         		message="<%= ${field.getName()}_doc.getTitle() %>"
-        		url='<%= url_${field.getName()}_doc %>'
+        		url='<%= ${field.getName()}_url %>'
         		target="_blank"
         	/>
-<% } %>
+<%     } %>
         	<aui:input name="${field.getName()}_DELETEDOCUMENT" label="delete-field" type="checkbox" inlineField="true"/>
 <% } %>
 	        <aui:input name="${field.getName()}_DOCUMENTFILE" label="" type="file" />
@@ -454,49 +455,39 @@ Liferay.provide(window,
 </aui:form>
 
 #if ($richtextFields.size() > 0)
-<script type="text/javascript">
+<aui:script>
  #foreach ($richtextField in $richtextFields)
-     function <portlet:namespace />init${application.getFileDef().getName()}${richtextField.getName()}Editor() {
+    function <portlet:namespace />init${application.getFileDef().getName()}${richtextField.getName()}Editor() {
          return '<%=UnicodeFormatter.toString(${classInstance}.get${richtextField.getName().substring(0,1).toUpperCase()}${richtextField.getName().substring(1)}()) %>';
-     }
+    }
+
  #end
-     function <portlet:namespace />saveEditors() {
- #foreach ($richtextField in $richtextFields)
+    function <portlet:namespace />saveEditors() {
+#foreach ($richtextField in $richtextFields)
           document.<portlet:namespace />add${application.getClassDef().getName()}.<portlet:namespace />${richtextField.getName()}.value = window.<portlet:namespace />${application.getFileDef().getName()}${richtextField.getName()}Editor.getHTML();
  #end
           submitForm(document.<portlet:namespace />add${application.getClassDef().getName()});
      }
-</script>
+</aui:script>
 #end
 
 #if($hasDocumentLibrary)
-<script type="text/javascript">
+<aui:script >
+	var <%= PortalUtil.getPortletNamespace("166")%>selectDocumentLibrary;
 
-var _15_selectDocumentLibrary;
+	function <portlet:namespace />dlBrowse (url, title, inputField) {
+		
+		<%= PortalUtil.getPortletNamespace("166")%>selectDocumentLibrary = function(dlUrl) {              		
+	      		inputField.value = dlUrl;
+		};
 
-Liferay.provide (window, '<portlet:namespace />closePopup', 
-      function (popupId) {
-                var A = AUI();
-                   A.DialogManager.closeByChild('#' + popupId);
-                },
-                ['aui-base','aui-dialog','aui-dialog-iframe']);
-
-      function <portlet:namespace />dlBrowse(url, title, inputField) {
-        
-        _15_selectDocumentLibrary = function(dlUrl) {
-              <portlet:namespace />closePopup('<portlet:namespace/>selectDocumentLibrary');
-              inputField.value = dlUrl;
-        }
 		Liferay.Util.openWindow(
 			{
-				dialog: {
-					align: Liferay.Util.Window.ALIGN_CENTER,
-					width: 680
-				},
 				id: '<portlet:namespace/>selectDocumentLibrary',
 				title: title,
 				uri: url
-			});
-      }
-</script>
+			}
+		);
+	}	
+</aui:script>
 #end

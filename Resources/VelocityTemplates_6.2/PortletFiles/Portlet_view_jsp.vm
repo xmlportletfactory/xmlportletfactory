@@ -43,6 +43,8 @@
 <liferay-ui:error key="${file_name.toLowerCase()}-error-deleting" message="${file_name.toLowerCase()}-error-deleting" />
 <liferay-ui:error key="permission-error" message="permission-error" />
 
+<aui:nav-bar>
+	<aui:nav>		
 #set ($addmode="true")
 #if(${application.getClassDef().isSetMode()}=="true")
 #set ($addmode=${application.getClassDef().getMode().getAdd()})
@@ -50,7 +52,7 @@
 #if (${addmode}=="true")
 <c:choose>
 	<c:when test='<%= (Boolean)request.getAttribute("hasAddPermission") %>'>
-		<aui:button name="add${fileDef_name}Button" href="<%=add${application.getClassDef().getName()}URL %>" value="${file_name.toLowerCase()}-add" />
+		<aui:nav-item name="add${fileDef_name}Button" href="<%=add${application.getClassDef().getName()}URL %>" label="${file_name.toLowerCase()}-add"/>
 	</c:when>
 </c:choose>
 #end
@@ -63,7 +65,7 @@
 			resourcePrimKey="<%= String.valueOf(themeDisplay.getScopeGroupId()) %>"
 			var="modelPermissionsURL"
 		/>
-		<aui:button href="<%= modelPermissionsURL %>" value="permissions" />
+		<aui:nav-item name="add${fileDef_name}Button" href="<%= modelPermissionsURL %>" label="permissions"/>
 	</c:when>
 </c:choose>
 
@@ -77,13 +79,18 @@
 #end
 #end
 #end
+	</aui:nav>
 
 #if (${filtermode}=="true")
-<form id="${file_name}FilterForm" name="${file_name}FilterForm" action="<%=${file_name}FilterURL %>" method="POST">
-	<input type="text" name="${file_name}Filter" value="<%= HtmlUtil.escape(${file_name}Filter) %>" />
-	<input type="submit" value="<liferay-ui:message key="filter" />">
-</form>
+<aui:form name="${file_name}FilterForm" action="<%=${file_name}FilterURL %>" method="post">
+	<aui:nav-bar-search cssClass="pull-right">
+				<div class="form-search">
+					<liferay-ui:input-search id="${file_name}Filter" name="${file_name}Filter" placeholder='<%= LanguageUtil.get(locale, "keywords") %>' />
+				</div>
+	</aui:nav-bar-search>
+</aui:form>
 #end
+</aui:nav-bar>
 <%
 	String iconChecked = "checked";
 	String iconUnchecked = "unchecked";

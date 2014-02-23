@@ -114,7 +114,6 @@ public class ${classDef_name}AssetRendererFactory extends BaseAssetRendererFacto
 		}
 		
 		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
-					getControlPanelPlid(themeDisplay),
 					"${classDef_name}_WAR_${commonData.getProjectName()}portlet",
 					PortletRequest.RENDER_PHASE);
 
