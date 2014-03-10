@@ -9,9 +9,6 @@
 #set ($hasDocuments="false")
 #set ($fields = $application.getFileDef().getFields().getFieldArray())
 #foreach($field in $fields)
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
-#set ($hasDocuments="true")
-#end
 #if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
 #set ($hasDocuments="true")
 #end

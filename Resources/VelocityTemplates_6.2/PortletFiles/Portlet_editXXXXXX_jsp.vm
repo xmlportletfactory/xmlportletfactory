@@ -10,9 +10,6 @@
 #set ($hasDocumentLibrary=false)
 #set ($fields = $application.getFileDef().getFields().getFieldArray())
 #foreach($field in $fields)
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
-#set ($hasDocuments=true)
-#end
 #if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
 #set ($hasDocuments=true)
 #end
@@ -179,8 +176,7 @@ Liferay.provide(window,
 	</c:if>
 #set ($fields = $application.getFileDef().getFields().getFieldArray())
 #foreach($field in $fields)
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image" || 
-	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
 	<aui:input type="hidden" name="HIDDEN_${field.getName()}" value="<%=${classInstance}.get${field.getName().substring(0,1).toUpperCase()}${field.getName().substring(1)}() %>"/>
 #end
 #end
@@ -281,8 +277,7 @@ Liferay.provide(window,
 #if(${field.getRequired()}=="true")
 	<% requiredLabel ="*"; %>
 #end
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="document" && 
-	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="image" &&
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="document" &&
 	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="richtext" &&
 	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="documentlibrary") 
 			<aui:input name="${field.getName()}" disabled="${disabled}" label='<%= LanguageUtil.get(pageContext, "${application.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}") + requiredLabel %>'/>
@@ -311,8 +306,7 @@ Liferay.provide(window,
 
 <% requiredLabel =""; %>
 
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document" || 
-	${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
 <% if (${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)()!=0){
 	FileEntry ${field.getName()}_doc = PortletFileRepositoryUtil.getPortletFileEntry(${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)());
 	String ${field.getName()}_url = PortletFileRepositoryUtil.getPortletFileEntryURL(themeDisplay, ${field.getName()}_doc, StringPool.BLANK);

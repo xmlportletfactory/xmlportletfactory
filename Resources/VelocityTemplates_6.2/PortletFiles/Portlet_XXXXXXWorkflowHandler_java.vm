@@ -15,8 +15,6 @@ import com.liferay.portal.service.ServiceContext;
 import com.liferay.portal.theme.ThemeDisplay;
 import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
 
-import com.liferay.portal.kernel.language.LanguageUtil;
-
 import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
 
 import java.io.Serializable;
@@ -35,7 +33,7 @@ public class ${application.getClassDef().getName()}WorkflowHandler extends BaseW
 	}
 
 	public String getType(Locale locale) {
-		return LanguageUtil.get(locale, "model.resource." + CLASS_NAME);		
+		return ResourceActionsUtil.getModelResource(locale, getClassName());		
 	}
 
 	public String getTitle(long classPK, Locale locale) {

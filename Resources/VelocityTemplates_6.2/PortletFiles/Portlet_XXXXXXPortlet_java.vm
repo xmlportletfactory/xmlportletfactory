@@ -142,6 +142,13 @@ import com.liferay.portlet.documentlibrary.service.DLFolderLocalServiceUtil;
 #end
 import com.liferay.util.bridges.mvc.MVCPortlet;
 
+#if ($hasTrash)
+import java.util.Map;
+import java.util.HashMap;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+#end
+
 /**
  * Portlet implementation class ${classDef_name}
  */
@@ -819,6 +826,97 @@ public class ${classDef_name}Portlet extends MVCPortlet {
 			SessionErrors.add(request, "${fileDef_name.toLowerCase()}-error-deleting");
 		}
 	}
+
+#if ($hasTrash)
+	@ProcessAction(name = "moveToTrash${classDef_name}")
+	public void moveToTrash${classDef_name}(ActionRequest request, ActionResponse response)throws Exception {		
+
+		long id = ParamUtil.getLong(request, "resourcePrimKey");
+
+		if (Validator.isNotNull(id)) {
+			ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+			PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+			if (!${classDef_name}EntryPermission.contains(
+					permissionChecker, id, ActionKeys.DELETE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+			}
+
+			${classDef_name} ${classInstance} = ${classDef_name}LocalServiceUtil.get${classDef_name}(id);
+			${classDef_name}LocalServiceUtil.moveEntryToTrash(themeDisplay.getUserId(), ${classInstance});
+
+			Map<String, String[]> data = new HashMap<String, String[]>();
+
+			long[] deleteEntryIds = new long[] {id};		
+
+			data.put(
+				"deleteEntryClassName",
+				new String[] {${classDef_name}.class.getName()});
+#if ($asset)
+			String deleteEntryTitle = entry.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}();
+
+			if (Validator.isNotNull(deleteEntryTitle)) {
+				data.put("deleteEntryTitle", new String[] {deleteEntryTitle});
+			}
+#end
+
+			data.put(
+				"restoreEntryIds", ArrayUtil.toStringArray(deleteEntryIds));
+
+			SessionMessages.add(
+				request,
+				PortalUtil.getPortletId(request) +
+					SessionMessages.KEY_SUFFIX_DELETE_SUCCESS_DATA, data);
+
+			//hideDefaultSuccessMessage(request);			
+
+			
+            		response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+			
+			if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+            		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            		response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+			}
+#end
+		} else {
+			SessionErrors.add(request, "${fileDef_name.toLowerCase()}-error-deleting");
+		}
+	}
+
+	@ProcessAction(name = "restoreEntry${classDef_name}")
+	public void restoreEntry${classDef_name}(ActionRequest request, ActionResponse response)throws Exception {
+	
+		long[] restoreEntryIds = StringUtil.split(
+			ParamUtil.getString(request, "restoreEntryIds"), 0L);
+
+		for (long restoreEntryId : restoreEntryIds) {
+			ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+			PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+			if (!${classDef_name}EntryPermission.contains(
+					permissionChecker, restoreEntryId, ActionKeys.DELETE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+			}
+
+			${classDef_name}LocalServiceUtil.restoreEntryFromTrash(themeDisplay.getUserId(), restoreEntryId);
+		}
+	}
+
+#end
 
 	@ProcessAction(name = "update${classDef_name}")
 	public void update${classDef_name}(ActionRequest request, ActionResponse response) throws Exception {

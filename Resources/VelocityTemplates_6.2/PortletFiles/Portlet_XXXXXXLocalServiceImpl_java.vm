@@ -39,13 +39,13 @@ import com.liferay.portal.model.ResourceConstants;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 #end
+#if ($hasTrash)
+import com.liferay.portlet.trash.model.TrashEntry;
+#end
 import com.liferay.portal.model.User;
 #set ($fields = $application.getFileDef().getFields().getFieldArray())
 #set ($hasDocuments=false)
 #foreach($field in $fields)
-#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
-#set ($hasDocuments=true)
-#end
 #if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
 #set ($hasDocuments=true)
 #end
@@ -372,13 +372,14 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 				${classDef_name}ActivityKeys.ADD_${classDef_name.toUpperCase()}, 
 				StringPool.BLANK, 0);
 		
-#end
+#end		
 
+#if($hasWorkflow == "false")
 		// Indexer
-
 		Indexer indexer = IndexerRegistryUtil.getIndexer(${classDef_name}.class);
 
 		indexer.reindex(retVal);
+#end
 #if ($asset) 
 
 		// Asset
@@ -418,7 +419,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 				${classDef_name}ActivityKeys.UPDATE_${classDef_name.toUpperCase()}, StringPool.BLANK, 0);
 #end
 
-		${classDef_name} retVal = ${classInstance}Persistence.update(valid${classDef_name}, false);
+		${classDef_name} retVal = ${classInstance}Persistence.update(valid${classDef_name});
 
 		// Resources
 
@@ -430,11 +431,13 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 				serviceContext.getGuestPermissions());
 		}
 
-		// Indexer
-
+		
+#if($hasWorkflow == "false")
+		//Indexer
 		Indexer indexer = IndexerRegistryUtil.getIndexer(${classDef_name}.class);
 
 		indexer.reindex(retVal);
+#end
 #if ($asset)
 		// Asset
 
@@ -502,7 +505,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 	     	fileobj.setFolderDLId(valid${classDef_name}.getFolderDLId());
 #end
 
-	 		return ${classInstance}Persistence.update(fileobj, false);
+	 		return ${classInstance}Persistence.update(fileobj);
 	}
 
 	public void delete${classDef_name}Entry (${classDef_name} fileobj) throws PortalException, SystemException {
@@ -592,7 +595,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 		entry.setStatusByUserName(user.getFullName());
 		entry.setStatusDate(serviceContext.getModifiedDate(now));
 
-		${classInstance}Persistence.update(entry, false);
+		${classInstance}Persistence.update(entry);
 
 		// Indexer
 
@@ -600,8 +603,44 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 
 		if (status == WorkflowConstants.STATUS_APPROVED) {
 			indexer.reindex(entry);
+#if ($hasTrash)
+			// Trash
+
+			if (oldStatus == WorkflowConstants.STATUS_IN_TRASH) {
+				trashEntryLocalService.deleteEntry(
+					${classDef_name}.class.getName(), entryId);
+			}
+#end
 		}else {
-			indexer.delete(entry);
+			// Indexer
+#if ($hasTrash)
+			if (status == WorkflowConstants.STATUS_IN_TRASH) {
+				indexer.reindex(entry);
+			}
+			else {
+				indexer.delete(entry);
+			}
+#else
+			indexer.delete(entry);			
+#end
+#if ($hasTrash)
+			// Trash
+
+			if (status == WorkflowConstants.STATUS_IN_TRASH) {
+				trashEntryLocalService.addTrashEntry(
+					userId, entry.getGroupId(), ${classDef_name}.class.getName(),
+#if ($asset) 
+					entryId, entry.getUuid(), null, oldStatus, null,
+#else
+					entryId, Long.toString(entryId), null, oldStatus, null,
+#end
+					null);
+			}
+			else if (oldStatus == WorkflowConstants.STATUS_IN_TRASH) {
+				trashEntryLocalService.deleteEntry(
+					${classDef_name}.class.getName(), entryId);
+			}
+#end
 		}
 #if ($asset) 
 		// Asset
@@ -620,6 +659,59 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 	}
 #end
 
+#if ($hasTrash)
+	@Override
+	public ${classDef_name} moveEntryToTrash(long userId, ${classDef_name} entry)
+		throws PortalException, SystemException {
+
+		// Entry
+
+		int oldStatus = entry.getStatus();
+
+		if (oldStatus == WorkflowConstants.STATUS_PENDING) {
+			entry.setStatus(WorkflowConstants.STATUS_DRAFT);
+
+			${classInstance}Persistence.update(entry);
+		}
+
+		updateStatus(
+			userId, entry.getPrimaryKey(), WorkflowConstants.STATUS_IN_TRASH,
+			new ServiceContext());		
+
+#if ($hasWorkflow)
+		// Workflow
+
+		if (oldStatus == WorkflowConstants.STATUS_PENDING) {
+			workflowInstanceLinkLocalService.deleteWorkflowInstanceLink(
+				entry.getCompanyId(), entry.getGroupId(),
+				${classDef_name}.class.getName(), entry.getPrimaryKey());
+		}
+#end
+		return entry;
+	}
+
+	
+	@Override
+	public ${classDef_name} moveEntryToTrash(long userId, long entryId)
+		throws PortalException, SystemException {
+
+		${classDef_name} entry = ${classInstance}Persistence.findByPrimaryKey(entryId);
+
+		return moveEntryToTrash(userId, entry);
+	}
+
+	@Override
+	public void restoreEntryFromTrash(long userId, long entryId)
+		throws PortalException, SystemException {
+
+		// Entry
+		TrashEntry trashEntry = trashEntryLocalService.getEntry(
+			${classDef_name}.class.getName(), entryId);
+
+		${classDef_name} entry = updateStatus(
+			userId, entryId, trashEntry.getStatus(), new ServiceContext());		
+	}
+#end
 	public void addEntryResources(
 			${classDef_name} entry, boolean addGroupPermissions,
 			boolean addGuestPermissions)

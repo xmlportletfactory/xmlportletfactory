@@ -100,7 +100,6 @@
 														</xs:complexType>
 													</xs:element>
 													<xs:element name="workflow" type="xs:boolean" default="false" minOccurs="0" maxOccurs="1"/>
-													<xs:element name="trash" type="xs:boolean" default="false" minOccurs="0" maxOccurs="1"/>
 													<xs:element name="generateActivity" type="xs:boolean" default="false" minOccurs="0" maxOccurs="1"/>
 													<xs:element name="showInControlPanel" type="xs:boolean" default="false" minOccurs="0" maxOccurs="1"/>
 													<xs:element name="asset" nillable="true" minOccurs="0">

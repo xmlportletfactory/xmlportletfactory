@@ -39,7 +39,7 @@
 				  	  Resources/VelocityTemplates_6.0/**,
 		  	  		  Resources/VelocityTemplates_6.1/**,
 					  Resources/VelocityTemplates_6.2/**,
-					  Resources/xml/xmlportletfactory.xsd,
+					  Resources/xml/*/xmlportletfactory.xsd,
 					  Resources/xml/Example01.xml,
 			          Resources/cfg/**"
 			excludes="lib/xmlportletfactory.jar,

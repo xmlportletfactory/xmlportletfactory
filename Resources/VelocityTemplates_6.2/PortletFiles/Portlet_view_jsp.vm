@@ -12,7 +12,9 @@
 <%@ page import="com.liferay.portal.kernel.util.Validator" %>
 <%@ page import="com.liferay.portal.kernel.util.OrderByComparator" %>
 <%@ page import="${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.${classDef_name}Comparator" %>
-
+#if ($hasTrash)	
+<%@ page import="com.liferay.portlet.trash.util.TrashUtil" %>
+#end
 <%@ page import="javax.script.ScriptEngine" %>
 <%@ page import="javax.script.ScriptEngineManager" %>
 
@@ -43,12 +45,18 @@
 <liferay-ui:error key="${file_name.toLowerCase()}-error-deleting" message="${file_name.toLowerCase()}-error-deleting" />
 <liferay-ui:error key="permission-error" message="permission-error" />
 
+#if (${deletemode})
+#if ($hasTrash)	
+
+<portlet:actionURL name="restoreEntry${classDef_name}" var="restoreEntry${classDef_name}URL">
+</portlet:actionURL>
+
+<liferay-ui:trash-undo portletURL="<%= restoreEntry${classDef_name}URL %>" />
+#end
+#end
+
 <aui:nav-bar>
 	<aui:nav>		
-#set ($addmode="true")
-#if(${application.getClassDef().isSetMode()}=="true")
-#set ($addmode=${application.getClassDef().getMode().getAdd()})
-#end
 #if (${addmode}=="true")
 <c:choose>
 	<c:when test='<%= (Boolean)request.getAttribute("hasAddPermission") %>'>
@@ -68,17 +76,6 @@
 		<aui:nav-item name="add${fileDef_name}Button" href="<%= modelPermissionsURL %>" label="permissions"/>
 	</c:when>
 </c:choose>
-
-#set ($filtermode="false")
-#set ($fields = $application.getFileDef().getFields().getFieldArray())
-#foreach($field in $fields)
-#set($tipoCampo = ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
-#if(${tipoCampo}=="varchar")
-#if (${field.getType().getVarchar().getFilter()} == "true")
-#set ($filtermode="true")
-#end
-#end
-#end
 	</aui:nav>
 
 #if (${filtermode}=="true")

@@ -133,7 +133,7 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 
 		Document document = getBaseModelDocument(PORTLET_ID, entry);		
 
-		document.addKeyword(Field.GROUP_ID, getParentGroupId(entry.getGroupId()));
+		document.addKeyword(Field.GROUP_ID, getSiteGroupId(entry.getGroupId()));
 		
 		document.addKeyword(Field.SCOPE_GROUP_ID, entry.getGroupId());
 

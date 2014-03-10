@@ -35,12 +35,20 @@ import javax.portlet.WindowState;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 
+#if ($hasTrash)
+import com.liferay.portal.kernel.trash.TrashRenderer;
+#end
+
 /**
  * @author ${author}
  * @author Juan Gonzalez P.
  */
+#if ($hasTrash)
+public class ${classDef_name}AssetRenderer extends BaseAssetRenderer 
+	implements TrashRenderer {
+#else
 public class ${classDef_name}AssetRenderer extends BaseAssetRenderer {
-
+#end
 
 	public ${classDef_name}AssetRenderer(${classDef_name} entry) {
 		_entry = entry;
@@ -75,8 +83,6 @@ public class ${classDef_name}AssetRenderer extends BaseAssetRenderer {
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse)
 		throws Exception {
-
-		//PortletURL portletURL = liferayPortletResponse.createActionURL();
 
 		PortletURL portletURL = liferayPortletResponse.createLiferayPortletURL(
 				getControlPanelPlid(liferayPortletRequest),
@@ -185,6 +191,18 @@ public class ${classDef_name}AssetRenderer extends BaseAssetRenderer {
 		return path + "/icons/icon.png";
 	}
 
+#if ($hasTrash)
+
+	@Override
+	public String getPortletId() {		
+		return "${classDef_name}_WAR_${commonData.getProjectName()}portlet";
+	}
+
+	@Override
+	public String getType() {
+		return "${classDef_name}";
+	}
+#end
 	private long getCurrentPlid(LiferayPortletRequest request)
 			throws PortalException, SystemException {
 		ThemeDisplay themeDisplay = (ThemeDisplay) request

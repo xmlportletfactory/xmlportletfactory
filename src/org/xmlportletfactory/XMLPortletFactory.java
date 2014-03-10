@@ -128,10 +128,19 @@ public class XMLPortletFactory {
     private void init() throws NoParentOrCurrentPathFound, SAXException, IOException {
         _parentPath=properties.getProperty(PORLETSDIR_KEY);
         _sdk_version=properties.getProperty(SDK_VERSION);
+	 String use_xsd = "6.2";
+	if (_sdk_version.startsWith("6.0")){
+                use_xsd = "6.0";
+        } else if (_sdk_version.startsWith("6.1")) {
+                use_xsd = "6.1";
+        } else {
+            	use_xsd = "6.2";
+        }
+
         portletPath = "";
         XSDDef = "xmlportletfactory.xsd";
         XMLDocPath = XMLFileDef.getAbsolutePath();
-        XSDDocPath = _currentPath + FILE_SEP +"Resources"+FILE_SEP+"xml"+FILE_SEP + XSDDef;
+        XSDDocPath = _currentPath + FILE_SEP +"Resources"+FILE_SEP+"xml"+ FILE_SEP + use_xsd + FILE_SEP + XSDDef;
         XMLUtils.validateAgainstSchema(XMLDocPath, XSDDocPath);
         XMLDoc = XMLUtils.parseXmlFile(XMLDocPath, false);
         xpath = XPathFactory.newInstance().newXPath();

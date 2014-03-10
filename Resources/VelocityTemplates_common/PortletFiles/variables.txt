@@ -3,6 +3,28 @@
 #set( $fileDef_name = $application.getFileDef().getName())
 #set( $packageBase = "org.xmlportletfactory")
 #set( $pathBase = "org/xmlportletfactory")
+#set ($addmode="true")
+#if(${application.getClassDef().isSetMode()}=="true")
+#set ($addmode=${application.getClassDef().getMode().getAdd()})
+#end
+#set ($browsemode="true")
+#if(${application.getClassDef().isSetMode()}=="true")
+#set ($browsemode=${application.getClassDef().getMode().getBrowse()})
+#end
+#set ($deletemode="true")
+#if(${application.getClassDef().isSetMode()}=="true")
+#set ($deletemode=${application.getClassDef().getMode().getDelete()})
+#end
+#set ($filtermode="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#set($tipoCampo = ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#if(${tipoCampo}=="varchar")
+#if (${field.getType().getVarchar().getFilter()} == "true")
+#set ($filtermode="true")
+#end
+#end
+#end
 #set ($hasWorkflow=false)
 #if ($application.getClassDef().isSetWorkflow())
 #if ($application.getClassDef().getWorkflow() == "true")
@@ -64,5 +86,12 @@
 #end		
 #if($nombreCampo == $assetSummaryField)
 #set ($assetSummaryExist=true)
+#end
+#end
+#set ($hasTrash=false)
+#if ($application.getClassDef().isSetTrash())
+#if ($application.getClassDef().getTrash() == "true")
+#set ($hasWorkflow=true)
+#set ($hasTrash=true)
 #end
 #end

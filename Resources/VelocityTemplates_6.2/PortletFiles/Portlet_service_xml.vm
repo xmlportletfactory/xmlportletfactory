@@ -15,6 +15,13 @@
 #set ($hasWorkflow=true)
 #end
 #end
+#set ($hasTrash=false)
+#if ($table.getClassDef().isSetTrash())
+#if ($table.getClassDef().getTrash() == "true")
+#set ($hasWorkflow=true)
+#set ($hasTrash=true)
+#end
+#end
 #set ($asset=false)
 #set ($assetTitleField="")
 #set ($assetSummaryField="")
@@ -41,7 +48,7 @@
 #set ($assetSummaryExist=true)
 #end
 #end
-	<entity name="${table.getClassDef().getName()}" local-service="true" remote-service="false" uuid="${asset}">
+	<entity name="${table.getClassDef().getName()}" local-service="true" remote-service="false" uuid="${asset}" trash-enabled="${hasTrash}">
 #set ($fields = $table.getFileDef().getFields().getFieldArray())
 #set( $i = 0 )
 #set ($hasDocuments="false")
@@ -230,6 +237,9 @@
 #end
 #if ($hasWorkflow)			
 		<reference package-path="com.liferay.portal" entity="WorkflowInstanceLink" />
+#if ($hasTrash)			
+		<reference package-path="com.liferay.portlet.trash" entity="TrashEntry" />
+#end
 #end
 #if ($table.getClassDef().isSetGenerateActivity())
 #if ($table.getClassDef().getGenerateActivity() == "true")

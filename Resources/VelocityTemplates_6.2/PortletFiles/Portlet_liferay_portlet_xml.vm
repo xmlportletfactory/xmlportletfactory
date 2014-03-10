@@ -12,6 +12,23 @@
 #set ( $generatePortlet = "false" )
 #end
 #end
+#set ($hasWorkflow=false)
+#if ($table.getClassDef().isSetWorkflow())
+#if ($table.getClassDef().getWorkflow() == "true")
+#set ($hasWorkflow=true)
+#end
+#end
+#set ($hasTrash=false)
+#if ($table.getClassDef().isSetTrash())
+#if ($table.getClassDef().getTrash() == "true")
+#set ($hasWorkflow=true)
+#set ($hasTrash=true)
+#end
+#end
+#set ($asset=false)
+#if ($table.getClassDef().isSetAsset())
+#set ($asset=true)
+#end
 #if ($generatePortlet == "true" )
 	<portlet>
 		<portlet-name>$table.getClassDef().getName()</portlet-name>
@@ -29,15 +46,16 @@
 		<control-panel-entry-weight>17.5</control-panel-entry-weight>
 #end
 #end
-#if ($table.getClassDef().isSetAsset())
+#if ($asset)
 		<asset-renderer-factory>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.asset.${table.getClassDef().getName()}AssetRendererFactory</asset-renderer-factory>
 #end
-#if ($table.getClassDef().isSetWorkflow())
-#if ($table.getClassDef().getWorkflow() == "true")
+#if ($hasTrash)
+		<trash-handler>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.trash.${table.getClassDef().getName()}TrashHandler</trash-handler>
+#end
+#if ($hasWorkflow)
 		<workflow-handler>${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.workflow.${table.getClassDef().getName()}WorkflowHandler</workflow-handler>
 #end
-#end
-	    <action-url-redirect>true</action-url-redirect>
+		<action-url-redirect>true</action-url-redirect>
 		<instanceable>false</instanceable>
 		<scopeable>true</scopeable>
 		<header-portlet-css>/css/Portlet_${table.getClassDef().getName()}.css</header-portlet-css>

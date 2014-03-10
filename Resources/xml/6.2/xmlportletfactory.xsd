@@ -92,9 +92,7 @@
 													<xs:element name="generatePortlet" type="xs:boolean" default="true" minOccurs="0"/>
 													<xs:element name="restrictBy" minOccurs="0">
 														<xs:complexType>
-															<xs:sequence>
-																<xs:element name="companyId" type="xs:boolean" default="true" minOccurs="0"/>
-																<xs:element name="groupId" type="xs:boolean" default="false" minOccurs="0"/>
+															<xs:sequence>									
 																<xs:element name="userId" type="xs:boolean" default="false" minOccurs="0"/>
 															</xs:sequence>
 														</xs:complexType>
@@ -274,7 +272,6 @@
 																						<xs:element name="text"/>
 																						<xs:element name="richtext"/>
 																						<xs:element name="boolean"/>
-																						<xs:element name="image"/>
 																						<xs:element name="document"/>
 																						<xs:element name="documentlibrary"/>
 																					</xs:choice>
