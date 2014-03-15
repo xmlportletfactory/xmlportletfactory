@@ -105,10 +105,10 @@
 						<required>true</required>
 					</field>
 					<field>
-						<name>type_Image</name>
-						<title>Image</title>
+						<name>type_Document</name>
+						<title>Document</title>
 						<type>
-							<image></image>
+							<document></document>
 						</type>
 						<showFieldInView>true</showFieldInView>
 						<required>true</required>
@@ -836,6 +836,85 @@
 		</classDef>
 		<fileDef>
 			<name>products</name>
+			<fields>
+				<field>
+					<name>productId</name>
+					<title>Id</title>
+					<type>
+						<long>
+							<length>5</length>
+							<signed>false</signed>
+							<nullable>false</nullable>
+							<order>true</order>
+						</long>
+					</type>
+					<showFieldInView>true</showFieldInView>
+					<required>true</required>
+				</field>
+				<field>
+					<name>productName</name>
+					<title>Product Name</title>
+					<type>
+						<varchar>
+							<length>30</length>
+							<filter>true</filter>
+							<order>true</order>
+						</varchar>
+					</type>
+					<showFieldInView>true</showFieldInView>
+					<required>true</required>
+				</field>
+				<field>
+					<name>productDescription</name>
+					<title>Product Description</title>
+					<type>
+						<text></text>
+					</type>
+					<showFieldInView>true</showFieldInView>
+					<required>true</required>
+				</field>
+				<field>
+					<name>productPrice</name>
+					<title>Price</title>
+					<type>
+						<numeric>
+							<length>10</length>
+							<decimals>2</decimals>
+							<order>true</order>
+						</numeric>
+					</type>
+					<showFieldInView>true</showFieldInView>
+					<required>false</required>
+				</field>
+				<field>
+					<name>productActive</name>
+					<title>Is Active</title>
+					<type>
+						<boolean></boolean>
+					</type>
+					<showFieldInView>true</showFieldInView>
+					<required>false</required>
+				</field>
+			</fields>
+		</fileDef>
+	</application>
+
+<!-- 
+	
+
+	Test I: Trash (Juan Gonzalez)
+	        15 oct 2014 - Only 6.2.x
+
+ -->
+	<application>
+		<classDef>
+			<name>Products with Trash</name>
+			<title>Products Maintenance with Trash</title>
+			<trash>true</trash>
+			<showInControlPanel>true</showInControlPanel>
+		</classDef>
+		<fileDef>
+			<name>productsTrash</name>
 			<fields>
 				<field>
 					<name>productId</name>

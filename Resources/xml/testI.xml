@@ -8,7 +8,7 @@
 	<applications>
 		<application>
 			<classDef>
-				<name>TestCamposI</name>
+				<name>TestCamposH</name>
 				<title>Mantenimiento de TestCamposI</title>
 				<mode>
 					<add>true</add>
@@ -16,6 +16,7 @@
 					<modify>true</modify>
 					<browse>true</browse>
 				</mode>
+				<trash>true</trash>
 			</classDef>
 			<fileDef>
 				<name>test</name>
@@ -65,7 +66,7 @@
 						<name>testimage1</name>
 						<title>Imagen 1</title>
 						<type>
-							<image></image>
+							<document></document>
 						</type>
 						<showFieldInView>true</showFieldInView>
 					</field>
@@ -73,10 +74,26 @@
 						<name>testimage2</name>
 						<title>Imagen 2</title>
 						<type>
-							<image></image>
+							<document></document>
 						</type>
 						<showFieldInView>true</showFieldInView>
-					</field>					
+					</field>
+					<field>
+						<name>testdocument1</name>
+						<title>Document 1</title>
+						<type>
+							<document></document>
+						</type>
+						<showFieldInView>true</showFieldInView>
+					</field>
+					<field>
+						<name>testdocument2</name>
+						<title>Document 2</title>
+						<type>
+							<document></document>
+						</type>
+						<showFieldInView>true</showFieldInView>
+					</field>
 				</fields>
 			</fileDef>
 		</application>
