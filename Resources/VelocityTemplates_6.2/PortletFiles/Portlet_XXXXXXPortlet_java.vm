@@ -855,7 +855,7 @@ public class ${classDef_name}Portlet extends MVCPortlet {
 				"deleteEntryClassName",
 				new String[] {${classDef_name}.class.getName()});
 #if ($asset)
-			String deleteEntryTitle = entry.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}();
+			String deleteEntryTitle = ${classInstance}.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}();
 
 			if (Validator.isNotNull(deleteEntryTitle)) {
 				data.put("deleteEntryTitle", new String[] {deleteEntryTitle});
@@ -1159,10 +1159,18 @@ public class ${classDef_name}Portlet extends MVCPortlet {
         	}
 #if ($asset)
 #if (!$assetTitleExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(request.getAttribute("${assetTitleField}").toString());
+#else
 		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(ParamUtil.getString(request, "${assetTitleField}"));
 #end
+#end
 #if (!$assetSummaryExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(request.getAttribute("${assetSummaryField}").toString());
+#else
 		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(ParamUtil.getString(request, "${assetSummaryField}"));
+#end
 #end
 #end		
 

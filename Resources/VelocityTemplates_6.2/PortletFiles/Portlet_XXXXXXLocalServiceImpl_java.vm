@@ -29,6 +29,7 @@ import com.liferay.portlet.asset.model.AssetLinkConstants;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.model.ModelHintsUtil;
 import com.liferay.portal.kernel.util.Validator;
+import java.util.regex.Pattern;
 #end
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.Indexer;
@@ -267,7 +268,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 		else {
 			List<${classDef_name}> results =${classInstance}Persistence.findByG_UT_ST(
 				groupId, urlTitle, status);
-			if (results!=null){
+			if (results!=null && results.size()>0){
 				entry = results.get(0);			
 			}
 		}
@@ -517,7 +518,13 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 		resourceLocalService.deleteResource(
 			fileobj.getCompanyId(), ${classDef_name}.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, fileobj.getPrimaryKey());
+#if ($asset) 
+		// Asset
 
+		assetEntryLocalService.deleteEntry(
+				${classDef_name}.class.getName(), fileobj.getPrimaryKey());
+
+#end
 #if(${hasDocuments})
 		//Remove DocumentFile dir
 		Long dlFolder = fileobj.getFolderDLId();
@@ -532,19 +539,17 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 		socialActivityLocalService.deleteActivities(
 			${classDef_name}.class.getName(), fileobj.getPrimaryKey()); 	
 #end
+#if ($hasTrash) 
+		// Trash
 
+		trashEntryLocalService.deleteEntry(
+			${classDef_name}.class.getName(), fileobj.getPrimaryKey());
+#end
 		// Indexer
 
-		Indexer indexer = IndexerRegistryUtil.getIndexer(${classDef_name}.class);
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(${classDef_name}.class);
 
 		indexer.delete(fileobj);
-#if ($asset) 
-		// Asset
-
-		assetEntryLocalService.deleteEntry(
-				${classDef_name}.class.getName(), fileobj.getPrimaryKey());
-
-#end
 #if ($hasWorkflow)
 		// Workflow
 		workflowInstanceLinkLocalService.deleteWorkflowInstanceLinks(
@@ -590,6 +595,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 		int oldStatus = entry.getStatus();
 		long oldStatusByUserId = entry.getStatusByUserId();
 
+		entry.setModifiedDate(serviceContext.getModifiedDate(now));
 		entry.setStatus(status);
 		entry.setStatusByUserId(user.getUserId());
 		entry.setStatusByUserName(user.getFullName());
@@ -599,10 +605,15 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 
 		// Indexer
 
-		Indexer indexer = IndexerRegistryUtil.getIndexer(${classDef_name}.class);
+		Indexer indexer = IndexerRegistryUtil.nullSafeGetIndexer(${classDef_name}.class);
 
-		if (status == WorkflowConstants.STATUS_APPROVED) {
-			indexer.reindex(entry);
+		if (status == WorkflowConstants.STATUS_APPROVED) {		
+
+#if ($asset) 
+			assetEntryLocalService.updateEntry(
+				${classDef_name}.class.getName(), entryId, 
+				entry.getModifiedDate(), true);	
+#end
 #if ($hasTrash)
 			// Trash
 
@@ -611,18 +622,12 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 					${classDef_name}.class.getName(), entryId);
 			}
 #end
+			indexer.reindex(entry);
 		}else {
-			// Indexer
-#if ($hasTrash)
-			if (status == WorkflowConstants.STATUS_IN_TRASH) {
-				indexer.reindex(entry);
-			}
-			else {
-				indexer.delete(entry);
-			}
-#else
-			indexer.delete(entry);			
-#end
+#if ($asset) 
+			assetEntryLocalService.updateVisible(
+				${classDef_name}.class.getName(), entryId, false);			
+#end	
 #if ($hasTrash)
 			// Trash
 
@@ -641,19 +646,18 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 					${classDef_name}.class.getName(), entryId);
 			}
 #end
-		}
-#if ($asset) 
-		// Asset
-		if (status == WorkflowConstants.STATUS_APPROVED) {
-
-            		assetEntryLocalService.updateVisible(
-                		${classDef_name}.class.getName(), entryId, true);
-        	} else {
-
-            		assetEntryLocalService.updateVisible(
-                		${classDef_name}.class.getName(), entryId, false);
-        	}
+		// Indexer
+#if ($hasTrash)
+			if (status == WorkflowConstants.STATUS_IN_TRASH) {
+				indexer.reindex(entry);
+			}
+			else {
+				indexer.delete(entry);
+			}
+#else
+			indexer.delete(entry);			
 #end
+		}
 
 		return entry;
 	}
@@ -764,6 +768,7 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 			guestPermissions);
 	}
 #if ($asset) 
+
 	public void updateAsset(
 			long userId, ${classDef_name} entry, long[] assetCategoryIds,
 			String[] assetTagNames, long[] assetLinkEntryIds)
@@ -782,11 +787,12 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 			StringUtil.shorten(entry.get${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(), 500));
 
 		AssetEntry assetEntry = assetEntryLocalService.updateEntry(
-			userId, entry.getGroupId(), ${classDef_name}.class.getName(),
+			userId, entry.getGroupId(), entry.getCreateDate(),
+			entry.getModifiedDate(), ${classDef_name}.class.getName(),
 			entry.getPrimaryKey(), entry.getUuid(), 0, assetCategoryIds,
-			assetTagNames, visible, null, null, null, null,
-			ContentTypes.TEXT_HTML, entry.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(), null, summary, null, null,
-			0, 0, null, false);
+			assetTagNames, visible, null, null, null, ContentTypes.TEXT_HTML,
+			entry.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(), null, summary, null, null, 0, 0,
+			null, false);		
 
 		assetLinkLocalService.updateLinks(
 			userId, assetEntry.getEntryId(), assetLinkEntryIds,
@@ -834,15 +840,13 @@ public class ${classDef_name}LocalServiceImpl extends ${classDef_name}LocalServi
 			title = String.valueOf(entryId);
 		}
 		else {
-			title = FriendlyURLNormalizerUtil.normalize(title, _URL_TITLE_REPLACE_CHARS);
+			title = FriendlyURLNormalizerUtil.normalize(title, _friendlyURLPattern);
 		}
 
 		return ModelHintsUtil.trimString(
 			${classDef_name}.class.getName(), "urlTitle", title);
 	}
 
-	private static final char[] _URL_TITLE_REPLACE_CHARS = new char[] {
-		'.', '/'
-	};
+	private static Pattern _friendlyURLPattern = Pattern.compile("[^a-z0-9_-]");	
 #end
 }

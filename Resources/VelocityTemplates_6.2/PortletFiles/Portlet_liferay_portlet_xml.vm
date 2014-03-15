@@ -18,14 +18,15 @@
 #set ($hasWorkflow=true)
 #end
 #end
+#set ($asset=false)
 #set ($hasTrash=false)
 #if ($table.getClassDef().isSetTrash())
 #if ($table.getClassDef().getTrash() == "true")
 #set ($hasWorkflow=true)
+#set ($asset=true)
 #set ($hasTrash=true)
 #end
 #end
-#set ($asset=false)
 #if ($table.getClassDef().isSetAsset())
 #set ($asset=true)
 #end

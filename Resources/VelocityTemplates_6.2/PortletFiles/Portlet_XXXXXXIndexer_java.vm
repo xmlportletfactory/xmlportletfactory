@@ -8,13 +8,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.security.auth.PrincipalException;
 import com.liferay.portal.security.permission.PermissionChecker;
 
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.Projection;
-import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.ProjectionList;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -25,14 +18,12 @@ import com.liferay.portal.kernel.search.SearchEngineUtil;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 #if ($hasWorkflow)
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 #end
 import com.liferay.portal.security.permission.ActionKeys;
-import com.liferay.portal.security.permission.PermissionChecker;
 import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.model.${classDef_name};
 import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.${classDef_name}LocalServiceUtil;
 import ${packageBase}.${commonData.getClient().toLowerCase()}.${commonData.getProjectName().toLowerCase()}.service.permission.${classDef_name}EntryPermission;
@@ -91,13 +82,7 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 		throws Exception {
 
 #if ($hasWorkflow)
-		int status = GetterUtil.getInteger(
-			searchContext.getAttribute(Field.STATUS),
-			WorkflowConstants.STATUS_ANY);
-
-		if (status != WorkflowConstants.STATUS_ANY) {
-			contextQuery.addRequiredTerm(Field.STATUS, status);
-		}
+		addStatus(contextQuery, searchContext);
 #end
 	}
 
@@ -109,7 +94,7 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 	}
 
 	@Override
-    	public void postProcessSearchQuery(BooleanQuery searchQuery,
+	public void postProcessSearchQuery(BooleanQuery searchQuery,
             SearchContext searchContext) throws Exception {   
 
 #set ($fields = $application.getFileDef().getFields().getFieldArray())
@@ -118,7 +103,6 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 #if(${tipoCampo}=="varchar")
 #if (${field.getType().getVarchar().getFilter()} == "true")
 #set ($nombreCampo = ${field.getName()})
-
 		searchQuery.addTerm("${nombreCampo}", searchContext.getKeywords());	
 #end
 #end
@@ -131,23 +115,7 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 	protected Document doGetDocument(Object obj) throws Exception {
 		${classDef_name} entry = (${classDef_name})obj;
 
-		Document document = getBaseModelDocument(PORTLET_ID, entry);		
-
-		document.addKeyword(Field.GROUP_ID, getSiteGroupId(entry.getGroupId()));
-		
-		document.addKeyword(Field.SCOPE_GROUP_ID, entry.getGroupId());
-
-		document.addKeyword(Field.COMPANY_ID, entry.getCompanyId());
-
-		document.addKeyword(Field.PORTLET_ID, PORTLET_ID);
-
-		document.addDate(Field.CREATE_DATE, entry.getCreateDate());
-
-		document.addDate(Field.MODIFIED_DATE, entry.getModifiedDate());
-
-		document.addKeyword(Field.ENTRY_CLASS_NAME, ${classDef_name}.class.getName());
-
-		document.addKeyword(Field.ENTRY_CLASS_PK, entry.getPrimaryKey());
+		Document document = getBaseModelDocument(PORTLET_ID, entry);				
 
 #if ($asset)
 		//Document TITLE
@@ -224,7 +192,11 @@ public class ${application.getClassDef().getName()}Indexer extends BaseIndexer{
 		${classDef_name} entry = (${classDef_name})obj;
 
 #if ($hasWorkflow)
+#if ($hasTrash)
+		if (!entry.isApproved() && !entry.isInTrash()) {
+#else
 		if (!entry.isApproved()) {
+#end
 			return;
 		}
 #end

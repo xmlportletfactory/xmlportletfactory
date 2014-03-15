@@ -200,7 +200,7 @@ public class ${classDef_name}AssetRenderer extends BaseAssetRenderer {
 
 	@Override
 	public String getType() {
-		return "${classDef_name}";
+		return ${classDef_name}AssetRendererFactory.TYPE;
 	}
 #end
 	private long getCurrentPlid(LiferayPortletRequest request)

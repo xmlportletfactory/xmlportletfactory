@@ -205,7 +205,7 @@ Liferay.provide(window,
 			
 #end
 #if (!$assetSummaryExist)
-			<aui:input name="${assetTitleField}" label="summary"/>		
+			<aui:input name="${assetSummaryField}" label="summary"/>		
 #end
 #end
 

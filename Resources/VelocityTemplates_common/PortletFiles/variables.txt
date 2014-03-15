@@ -38,6 +38,14 @@
 #end
 #end
 #set ($asset=false)
+#set ($hasTrash=false)
+#if ($application.getClassDef().isSetTrash())
+#if ($application.getClassDef().getTrash() == "true")
+#set ($hasWorkflow=true)
+#set ($asset=true)
+#set ($hasTrash=true)
+#end
+#end
 #set ($assetTitleField="")
 #set ($assetSummaryField="")
 #set ($assetTitleExist=false)
@@ -50,6 +58,8 @@
 #set ($assetFullContentField="")
 #if ($application.getClassDef().isSetAsset())
 #set ($asset=true)
+#end
+#if ($asset)
 #set ($assetTitleField=${application.getClassDef().getAsset().getAssetTitleFieldName()})
 #set ($assetSummaryField=${application.getClassDef().getAsset().getAssetSummaryFieldName()})
 #set ($assetFullContentField=${application.getClassDef().getAsset().getFullContentFieldName()})
@@ -86,12 +96,5 @@
 #end		
 #if($nombreCampo == $assetSummaryField)
 #set ($assetSummaryExist=true)
-#end
-#end
-#set ($hasTrash=false)
-#if ($application.getClassDef().isSetTrash())
-#if ($application.getClassDef().getTrash() == "true")
-#set ($hasWorkflow=true)
-#set ($hasTrash=true)
 #end
 #end

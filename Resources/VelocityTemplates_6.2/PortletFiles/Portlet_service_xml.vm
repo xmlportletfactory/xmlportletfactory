@@ -16,19 +16,22 @@
 #end
 #end
 #set ($hasTrash=false)
+#set ($asset=false)
 #if ($table.getClassDef().isSetTrash())
 #if ($table.getClassDef().getTrash() == "true")
 #set ($hasWorkflow=true)
+#set ($asset=true)
 #set ($hasTrash=true)
 #end
 #end
-#set ($asset=false)
 #set ($assetTitleField="")
 #set ($assetSummaryField="")
 #set ($assetTitleExist=false)
 #set ($assetSummaryExist=false)
 #if ($table.getClassDef().isSetAsset())
 #set ($asset=true)
+#end
+#if ($asset)
 #set ($assetTitleField=${table.getClassDef().getAsset().getAssetTitleFieldName()})
 #set ($assetSummaryField=${table.getClassDef().getAsset().getAssetSummaryFieldName()})
 #if ($assetTitleField=="")
@@ -68,10 +71,7 @@
 
 		<!-- Other columns -->
 #else
-#if (${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} == "image")
-		<column name="${field.getName()}"  type="long" />
-#set ($hasDocuments="true")
-#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} =="document")
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()} =="document")
 		<column name="${field.getName()}"  type="long" />
 #set ($hasDocuments="true")
 #else

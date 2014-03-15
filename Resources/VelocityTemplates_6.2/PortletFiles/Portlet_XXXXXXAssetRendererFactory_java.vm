@@ -45,12 +45,6 @@ public class ${classDef_name}AssetRendererFactory extends BaseAssetRendererFacto
 
 	public static final String TYPE = "${classDef_name}";
 
-	private long getCurrentPlid(LiferayPortletRequest request)
-			throws PortalException, SystemException {
-		ThemeDisplay themeDisplay = (ThemeDisplay) request
-				.getAttribute(WebKeys.THEME_DISPLAY);
-		return themeDisplay.getPlid();
-	}
 #if ($hasWorkflow)
 	@Override
 	public AssetRenderer getAssetRenderer(long groupId, String urlTitle)
