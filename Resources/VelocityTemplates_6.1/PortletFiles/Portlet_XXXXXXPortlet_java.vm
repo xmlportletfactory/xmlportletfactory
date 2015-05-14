@@ -1079,7 +1079,7 @@ public class ${classDef_name}Portlet extends MVCPortlet {
 #foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
 #if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
 	@ProcessEvent(qname="{http://liferay.com/events}${tabledetail.getClassDef().getName()}.${detailfile.getConnectionFieldName()}")
-	public void reciveEvent(EventRequest request, EventResponse response) throws Exception {
+	public void receiveEvent(EventRequest request, EventResponse response) throws Exception {
 		Event event = request.getEvent();
 		String ${detailfile.getConnectionFieldName()} = (String)event.getValue();
 		request.getPortletSession().setAttribute("${detailfile.getConnectionFieldName()}",${detailfile.getConnectionFieldName()});
