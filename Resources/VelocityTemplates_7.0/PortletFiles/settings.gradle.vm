@@ -1,0 +1,3 @@
+#set( $createPath = "${modulesParentDirPath}" )
+#set( $createName = "/settings.gradle" )
+include "${normalizedProjectName}-api", "${normalizedProjectName}-service", "${normalizedProjectName}-web"

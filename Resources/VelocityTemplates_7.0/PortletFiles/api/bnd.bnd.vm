@@ -1,0 +1,9 @@
+#set( $targetFile = "${apiModulePath}/bnd.bnd" )
+Bundle-Name: ${projectName} API
+Bundle-SymbolicName: ${basePackage}.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	${basePackage}.exception,\
+	${basePackage}.model,\
+	${basePackage}.service,\
+	${basePackage}.service.persistence

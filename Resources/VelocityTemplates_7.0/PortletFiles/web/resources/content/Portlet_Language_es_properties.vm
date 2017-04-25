@@ -1,0 +1,139 @@
+
+#set( $createPath = "${webModulePath}/src/main/resources/content" )
+#set( $createName = "/Language_es.properties" )
+#
+#  Portlet language localization messages
+#
+#foreach($table in $applications)
+#set ($fields = $table.getFileDef().getFields().getFieldArray())
+
+#
+# Portlet ${table.getClassDef().getTitle()} Operations messages
+#
+${table.getFileDef().getName().toLowerCase()}-operate-successfully=Operación Correcta
+${table.getFileDef().getName().toLowerCase()}-add=Crear registro ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-added-successfully=${table.getClassDef().getTitle()} fue creado correctamente
+${table.getFileDef().getName().toLowerCase()}-deleted-successfully=${table.getClassDef().getTitle()} fue eliminado correctamente
+${table.getFileDef().getName().toLowerCase()}-error-deleting=Errores encontrados al eliminar ${table.getClassDef().getTitle()}
+${table.getFileDef().getName().toLowerCase()}-updated-successfully=${table.getClassDef().getTitle()} fue modificado correctamente
+${table.getFileDef().getName().toLowerCase()}-empty-results-message=No hay ${table.getClassDef().getTitle()} para mostrar.
+${table.getFileDef().getName().toLowerCase()}-help=Este portlet permite a los usuarios crear, modificar y eliminar ${table.getClassDef().getTitle()} del sistema.
+
+#
+# Portlet ${table.getClassDef().getTitle()} Operations messages
+#
+#foreach($field in $fields)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}=${field.getTitle()}
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required=${field.getTitle()} requerido.
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="int" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="float" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="double" || ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="numeric")
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-required-number=${field.getTitle()} debe ser un número.
+#end
+#if(${field.getRegexpType().xmlText().isEmpty()} == false)
+${table.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}-regexp-no-match=${field.getTitle()} contenido inválido.
+#end
+#end
+
+#
+# Portlet ${table.getClassDef().getTitle()} Miscellaneous messages
+#
+action.ADD_${table.getClassDef().getName().toUpperCase()}=Crear ${table.getClassDef().getTitle()}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+#end
+
+#
+# Portlet Preferences messages
+#
+rows-per-page=Filas por Página
+rows-per-page-required=Filas por Página es campo requerido
+rows-per-page-invalid=Filas por Página Invalido
+date-format=Formato Fecha
+date-format-required=Formato Fecha es campo requerido
+date-format-error=Formato Fecha Erroneo
+datetime-format=Formato Fecha+Hora
+datetime-format-required=Formato Fecha+Hora es campo requerido
+datetime-format-error=Formato FechaHora Erroneo
+prefs-success=Preferencias Guardadas Correctamente
+prefs-tab2=Exportar
+prefs-tab3=Importar
+prefs-export=Exportar a fichero Excel
+prefs-export-message1=Desde aquí generaremos una hoja excel con todos los campos de la tabla.
+prefs-export-message2=En el caso de campos de validaciones, aparecerán sus respectivas descripciones asociadas.
+prefs-export-message3=Campos Imagen y Documentos solo aparecerá un texto indicando esto.
+prefs-import-message=Work in progress.
+prefs-export-sample=Exportar ejemplo Excel
+prefs-import=Importar fichero Excel
+prefs-view-type=Tipo de vista
+prefs-view-type-default=Por defecto
+prefs-view-type-user=Mostrar registros de usuario
+
+combo-select=Seleccione
+category.${commonData.getProjectName()}=${commonData.getProjectName()}
+boolean-true=Si
+boolean-false=No
+submit=Grabar
+cancel=Cancelar
+filter=Filtrar
+delete-field=Borrar
+dependent-rows-exist-error-deleting=No se puede eliminar registro maestro sin eliminar antes los de detalle.
+confirm-delete=¿Está seguro de que desea eliminar el registro actual? Tenga en cuenta que se borrarán TODOS los registros de detalle que dependan de él.
+
+#
+# Validator errors
+#
+email_error=Correo electrónico no válido.<br>(Ejemplo: usuario@dominio.com)
+ip_error=Ip incorrecta. (Ejemplo: 192.168.1.2)
+integer_regexp_error=Valor Integer no válido.<br>(Ejemplo: 280)
+float_regexp_error=Valor Float no válido.<br>(Ejemplo: 280.8)
+error_number_format=Formato numérico invalido.
+url_error=Url no válida.<br>(Ejemplo: http://www.google.es)
+zipspain_error=Código postal no válido.<br>(Example: 03801)
+nifspain_error=Nif no válido.<br>(Ejemplo: 21667876Q)
+phonespain_error=Teléfono no válido.<br>(Ejemplo: 99999999)
+zero_to_ten_error=Debe ser un número entre 0 y 10.<br>(Ejemplo: 5)
+
+#
+#  Portlet languague localization messages to be available portal wide
+#
+#  (Courtesy of Juan G. del Pino)
+#
+#if (($hasWorkflow || $generateActivity || $asset) ||
+	($hasWorkflow && $generateActivity && $asset) ||
+	($hasWorkflow && $generateActivity) ||
+	($asset && $generateActivity) ||
+	($hasWorkflow && $asset))
+#foreach($table in $applications)
+#set ($tableHasWorkflow=false)
+#if ($table.getClassDef().isSetWorkflow())
+#if ($table.getClassDef().getWorkflow() == "true")
+#set ($tableHasWorkflow=true)
+#end
+#end
+#set ($generateActivity=false)
+#if ($table.getClassDef().isSetGenerateActivity())
+#if ($table.getClassDef().getGenerateActivity() == "true")
+#set ($generateActivity=true)
+#end
+#end
+### Class: ${table.getClassDef().getName()} - ${table.getClassDef().getTitle()}
+### Table: ${table.getFileDef().getName()}
+#
+# Portlet ${table.getClassDef().getTitle()} Global messages
+#
+model.resource.${basePackage}.model.${table.getClassDef().getName()}=${table.getClassDef().getTitle()}
+model.resource.${basePackage}.model=${table.getClassDef().getTitle()}
+model.resource.${basePackage}.${table.getClassDef().getName()}=${table.getClassDef().getTitle()}
+#if ($generateActivity)
+#
+# Portlet ${table.getClassDef().getTitle()} Activity messages
+#
+activity-${table.getFileDef().getName().toLowerCase()}-added-record={0} added a new record in ${table.getClassDef().getTitle()} Table.
+activity-${table.getFileDef().getName().toLowerCase()}-updated-record={0} updated a record in ${table.getClassDef().getTitle()} Table.
+#if ($tableHasWorkflow)
+activity-${table.getFileDef().getName().toLowerCase()}-added-record-pending-approval={0} added a new record in ${table.getClassDef().getTitle()} Table waiting for Approval.
+#end
+#end
+#end
+#end

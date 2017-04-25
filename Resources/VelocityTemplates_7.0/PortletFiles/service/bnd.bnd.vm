@@ -1,0 +1,15 @@
+#set( $targetFile = "${serviceModulePath}/bnd.bnd" )
+Bundle-Name: ${projectName} Service
+Bundle-SymbolicName: ${basePackage}.service
+Bundle-Version: 1.0.0
+Export-Package:\
+	${basePackage}.model.impl,\
+	${basePackage}.search,\
+	${basePackage}.service.impl,\
+	${basePackage}.service.permission,\
+	${basePackage}.service.util,\
+## TODO
+##	${basePackage}.trash,\
+	${basePackage}.util
+Liferay-Require-SchemaVersion: 1.0.0
+Liferay-Service: true

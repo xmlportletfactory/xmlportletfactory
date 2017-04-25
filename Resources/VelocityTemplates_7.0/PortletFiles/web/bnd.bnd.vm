@@ -1,0 +1,21 @@
+#set( $targetFile = "${webModulePath}/bnd.bnd" )
+Bundle-Name: ${projectName} Web
+Bundle-SymbolicName: ${basePackage}.web
+Bundle-Version: 1.0.0
+Web-ContextPath: /$stringHelper.toLowerCaseHyphen($projectName)-web
+#*
+Bundle-ClassPath:\
+  .,\
+  lib/poi.jar,\
+  lib/commons-beanutils.jar,\
+  lib/commons-fileupload.jar
+  
+-includeresource:\
+  lib/poi.jar=poi-3.7.jar,\  
+  lib/commons-beanutils.jar=commons-beanutils-1.9.3.jar,\
+  lib/commons-fileupload.jar=commons-fileupload-1.3.2.jar
+ *#
+  
+Include-Resource: @poi-3.7.jar,\
+   @commons-beanutils-1.9.3.jar,\
+   @commons-fileupload-1.3.2.jar

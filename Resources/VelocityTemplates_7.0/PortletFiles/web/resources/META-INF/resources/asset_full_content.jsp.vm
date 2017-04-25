@@ -1,0 +1,26 @@
+
+#set( $createPath = "${webResourcesPath}/${snakeCaseEntityName}" )
+#set( $createName = "/asset_${snakeCaseEntityName}_full_content.jsp" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+#if ($asset)
+<%@include file="../init.jsp" %>
+<%@ page import="${basePackage}.model.${classDef_name}" %>
+
+<%@ page import="com.liferay.portal.kernel.util.StringPool" %>
+<%@ page import="com.liferay.portal.kernel.util.HttpUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.HtmlUtil" %>
+
+
+<jsp:useBean id="${classInstance}" type="${basePackage}.model.${classDef_name}" scope="request"/>
+
+<portlet:defineObjects />
+
+<%= ${classInstance}.get${assetFullContentField.substring(0,1).toUpperCase()}${assetFullContentField.substring(1)}() %>
+
+#else
+#*
+     As there are no asset services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

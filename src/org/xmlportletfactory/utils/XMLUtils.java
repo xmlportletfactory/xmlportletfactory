@@ -26,6 +26,8 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -110,6 +112,38 @@ public class XMLUtils {
      int length = hexString.length();
      hexString.getChars(0, length, chars, 4 - length);
      return chars;
+ }
+ 
+ public static Node findFirstElementChild(Node parentNode) {
+	 	
+	 	Node foundNode = null;
+	 
+	 	NodeList childNodes = parentNode.getChildNodes();
+		
+		for (int i = 0; i < childNodes.getLength() && foundNode == null; i++) {
+			Node item = childNodes.item(i);
+			if(item.getNodeType() == Node.ELEMENT_NODE) {
+				foundNode = item;
+			}
+		}
+		
+		return foundNode;
+ }
+ 
+ public static Node findFirstElementChildWithName(Node parentNode, String childName) {
+	 	
+	 	Node foundNode = null;
+	 
+	 	NodeList childNodes = parentNode.getChildNodes();
+		
+		for (int i = 0; i < childNodes.getLength() && foundNode == null; i++) {
+			Node item = childNodes.item(i);
+			if(childName.equals(item.getLocalName())) {
+				foundNode = item;
+			}
+		}
+		
+		return foundNode;
  }
  
 

@@ -19,6 +19,7 @@ import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -26,6 +27,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,6 +52,9 @@ import org.xml.sax.SAXException;
 import org.xmlportletfactory.exceptions.NoParentOrCurrentPathFound;
 import org.xmlportletfactory.exceptions.NoResourcesFoundException;
 import org.xmlportletfactory.gui.MainWindow;
+import org.xmlportletfactory.templates.FieldHelper;
+import org.xmlportletfactory.templates.StringHelper;
+import org.xmlportletfactory.templates.Variables;
 import org.xmlportletfactory.utils.CopyUtil;
 import org.xmlportletfactory.utils.VelocityFileNameFilter;
 import org.xmlportletfactory.utils.XMLUtils;
@@ -79,6 +86,7 @@ public class XMLPortletFactory {
     private static String XSDDocPath;
     private static Document XMLDoc;
     private static Properties properties;
+    private static boolean legacyModeEnabled;
 
     public static String PORLETSDIR_KEY="xmlportletfactory_porletsdir";
     public static String LASTXML_KEY="xmlportletfactory_lastxml";
@@ -128,13 +136,17 @@ public class XMLPortletFactory {
     private void init() throws NoParentOrCurrentPathFound, SAXException, IOException {
         _parentPath=properties.getProperty(PORLETSDIR_KEY);
         _sdk_version=properties.getProperty(SDK_VERSION);
-	 String use_xsd = "6.2";
+        legacyModeEnabled = true;
+    String use_xsd;
 	if (_sdk_version.startsWith("6.0")){
                 use_xsd = "6.0";
         } else if (_sdk_version.startsWith("6.1")) {
                 use_xsd = "6.1";
+        } else if (_sdk_version.startsWith("6.2")) { 
+        		use_xsd = "6.2";
         } else {
-            	use_xsd = "6.2";
+            	use_xsd = "7.0";
+            	legacyModeEnabled = false;
         }
 
         portletPath = "";
@@ -158,18 +170,32 @@ public class XMLPortletFactory {
             
             String XMLApplicationstrName = (String) xpath.evaluate("/definition/commonData/projectName", XMLDoc, XPathConstants.STRING);
             // DEFINITION OF THE LOCATION TO ALL THE FILES.
-            portletPath = _parentPath + FILE_SEP + XMLApplicationstrName+"-portlet";
+            if(legacyModeEnabled) {
+            	portletPath = _parentPath + FILE_SEP + XMLApplicationstrName+"-portlet";
+            } else {
+            	portletPath = _parentPath;
+            }
             // GENERATING THE STRUCTURE OF THE NEW APPLICATION.
-            generateDirectories();
+            if(legacyModeEnabled) {
+            	generateDirectories();
+            } else {
+            	copyGradleWrapperFiles(XMLApplicationstrName);
+            }
+            
             // GENERATE THE VM TO RUN IT LATER.
-            String use_templates = "common";
-            generateVelocityFiles(use_templates);
+            String use_templates;
+            if(legacyModeEnabled) {
+	            use_templates = "common";
+	            generateVelocityFiles(use_templates);
+        	}
             if (_sdk_version.startsWith("6.0")){
                 use_templates = "6.0";
             } else if (_sdk_version.startsWith("6.1")) {
                 use_templates = "6.1";
-            } else {
+            } else if (_sdk_version.startsWith("6.1")) {
             	use_templates = "6.2";
+            } else {
+            	use_templates = "7.0";
             }
             generateVelocityFiles(use_templates);
         } catch (NoResourcesFoundException ex) {
@@ -194,31 +220,81 @@ public class XMLPortletFactory {
 
 
     // METHOD TO GENERATE ALL THE NECESSARY DIRS AND SUBDIRS.
+    @Deprecated
     private static void generateDirectories() throws Exception {
             boolean ok = (new File(portletPath)).mkdirs();
-            File sourceLocation = new File(_currentPath + FILE_SEP + "Resources"+FILE_SEP+"PortletStructureAndFiles");
+			String sourcePathname = _currentPath + FILE_SEP + "Resources" +
+				FILE_SEP + "PortletStructureAndFiles";
+            File sourceLocation = new File(sourcePathname);
             File targetLocation = new File(portletPath);
             CopyUtil.copyDirectoryStructure(sourceLocation, targetLocation);
+    }
+    
+    private static void copyGradleWrapperFiles(String projectName) throws Exception {
+		String sourcePathname = _currentPath + FILE_SEP + "Resources" +
+			FILE_SEP + "gradlew_files";
+        File sourceLocation = new File(sourcePathname);
+        File targetLocation = new File(portletPath + FILE_SEP + new StringHelper().toLowerCaseHyphen(projectName));
+        CopyUtil.copyDirectoryStructure(sourceLocation, targetLocation);
     }
 
     private static void generateVelocityFiles(String use_templates) throws NoResourcesFoundException {
         String resourceDir = _currentPath + FILE_SEP + "Resources"+FILE_SEP+"VelocityTemplates_"+use_templates+FILE_SEP+"PortletFiles";
-        String[] dirList = new File(resourceDir).list(new VelocityFileNameFilter());
-        if (dirList == null) {
+        List<File> templateList = listTemplateFiles(resourceDir);
+        if (templateList.isEmpty()) {
             System.out.println("Specified directory (" + resourceDir + ")does not exist or is not a directory.");
             throw new NoResourcesFoundException(resourceDir);
         } else {
-            System.out.println(" Found (" + dirList.length + ") entries in folder (" + resourceDir + ")");
-            for (int i = 0; i < dirList.length; i++) {
+            System.out.println(" Found (" + templateList.size() + ") entries in folder (" + resourceDir + ")");
+            for (int i = 0; i < templateList.size(); i++) {
                 System.out.println("-------------------------------------------------------------");
-                System.out.println("Generate File from Velocity Template (" + dirList[i] + ")");
-                generateVelocityFile(use_templates,dirList[i]);
+                System.out.println("Generate File from Velocity Template (" + templateList.get(i) + ")");
+                generateVelocityFile(use_templates, templateList.get(i));
             }
             System.out.println("-------------------------------------------------------------");
         }
     }
 
-    private static void generateVelocityFile(String use_templates, String fileName) {
+	private static List<File> listTemplateFiles(String resourceDir) {
+		
+		File resourcesDirectory = new File(resourceDir);
+		
+		List<File> templates = listTemplateFiles(resourcesDirectory);
+		
+		return templates;
+	}
+
+	private static List<File> listTemplateFiles(File resourcesDirectory) {
+		
+		List<File> templateFiles = new LinkedList<File>();
+	
+		File[] files = resourcesDirectory.listFiles(new VelocityFileNameFilter());
+		
+		templateFiles.addAll(Arrays.asList(files));
+		
+		File[] subDirectories = resourcesDirectory.listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isDirectory();
+			}
+		});
+		
+		for (File subDir : subDirectories) {
+			List<File> subDirTemplateFiles = listTemplateFiles(subDir);
+			templateFiles.addAll(subDirTemplateFiles);
+		}
+
+		return templateFiles;
+	}
+
+    private static void generateVelocityFile(String use_templates, File file) {
+    	String path = file.getAbsolutePath();
+    	String templateName = path.substring(path.indexOf(FILE_SEP + "Resources" + FILE_SEP));
+    	generateVelocityFile(use_templates, templateName);
+    }
+	
+    private static void generateVelocityFile(String use_templates, String templateName) {
         try {
             // parse xml file agains XMLBeans schema compilation jar
             DefinitionDocument definitionDocument = DefinitionDocument.Factory.parse(new File(XMLDocPath));
@@ -227,7 +303,7 @@ public class XMLPortletFactory {
             Applications applications = definition.getApplications();
             for (Application application : applications.getApplicationArray()) {
                 String applicationClassName = _parentPath + FILE_SEP + commonData.getProjectName();
-                processApplication(use_templates, fileName, commonData, application, applicationClassName, applications);
+                processApplication(use_templates, templateName, commonData, application, applicationClassName, applications);
             }
         } catch (XmlException ex) {
             Logger.getLogger(XMLPortletFactory.class.getName()).log(Level.SEVERE, null, ex);
@@ -236,8 +312,16 @@ public class XMLPortletFactory {
         }
     }
 
-    private static void processApplication(String use_templates, String fileName, CommonData commonData, Application application, String applicationClassName, Applications applications) {
-        try {
+    private static void processApplication(String use_templates, String file, CommonData commonData, Application application, String applicationClassName, Applications applications) {
+        
+    	if(use_templates == null 
+    					|| use_templates.trim().length() == 0 
+    					|| use_templates.startsWith("7.0")) {
+    		// TODO Deal with showInControlPanel=false ?
+    		application.getClassDef().setShowInControlPanel(true);
+    	}
+    	
+    	try {
             Fields fields = application.getFileDef().getFields();
 
             Field[] field = fields.getFieldArray();
@@ -300,21 +384,25 @@ public class XMLPortletFactory {
             vc.put("generator", _generadorNombre);
             vc.put("field_regexp", field_regexp);
             vc.put("file_name", application.getFileDef().getName());
+           
+            Variables vars = new Variables(commonData, application, applicationClassName, applications);
+            
+            vars.populate(vc);
+            
+            processVelocityTemplate(use_templates, file, applicationClassName, vc, application);
 
-            processVelocityTemplate(use_templates, fileName, applicationClassName, vc, application);
-
-            processValidation(use_templates, fileName, commonData, application, applicationClassName, applications);
+            processValidation(use_templates, file, commonData, application, applicationClassName, applications);
 
         } catch (Exception ex) {
             Logger.getLogger(XMLPortletFactory.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private static void processVelocityTemplate(String use_templates, String fileName, String applicationClassName, VelocityContext vc, Application application) {
+    private static void processVelocityTemplate(String use_templates, String templateName, String applicationClassName, VelocityContext vc, Application application) {
         try {
         	// get Velocity Template
             Template template = null;
-            template = Velocity.getTemplate( "/Resources/VelocityTemplates_"+use_templates+"/PortletFiles/" + fileName, "UTF-8" );            
+            template = Velocity.getTemplate(templateName, "UTF-8" );            
             StringWriter sw = new StringWriter();
             
             // merge it with the context variables and process.
@@ -331,20 +419,53 @@ public class XMLPortletFactory {
                 	}
                 }
             }
+            
+            
+            
             // get results and create correspondent file
-            if (vc.get("createName") != null && vc.get("createFile") == "true" && generatePortlet) {
-                System.out.println(" --> " + applicationClassName + "-portlet" + vc.get("createPath") + vc.get("createName"));
+
+            Object createPath = vc.get("createPath");
+            Object createName = vc.get("createName");
+            Object targetFile = vc.get("targetFile");
+            
+            if(targetFile != null) {
+            	String target = targetFile.toString();
+            	int lastSlashIndex = target.lastIndexOf('/');
+            	createPath = target.substring(0, lastSlashIndex);
+            	createName = target.substring(lastSlashIndex);
+            }
+            
+			if (createName != null && vc.get("createFile") == "true" && generatePortlet) {
+          
+				String filePath;
+				
+				if(legacyModeEnabled) {
+					filePath = applicationClassName + "-portlet" + createPath;
+				} else {
+					filePath = createPath.toString();
+					if(filePath.startsWith("/")) {
+						filePath =filePath.substring(1);
+					}
+				}
+				
+				(new File(portletPath + createPath.toString())).mkdirs();
+				
+				String relativePath = filePath + createName;
+				
+				System.out.println(" --> " + relativePath);
 
                 // create folder as stated in velocity template "createPath" variable.
-                boolean ok = (new File(applicationClassName + "-portlet" + vc.get("createPath"))).mkdirs();
+                boolean ok = (new File(filePath)).mkdirs();
                 
                 // create file as stated in velocity template "createName" variable
-                BufferedWriter outFile = new BufferedWriter(new FileWriter(applicationClassName + "-portlet" + vc.get("createPath") + vc.get("createName")));
+                String fullPath = portletPath + FILE_SEP + relativePath;
+                
+				BufferedWriter outFile = new BufferedWriter(new FileWriter(fullPath));
                 outFile.write(sw.toString());
                 outFile.flush();
                 outFile.close();
             } else {
-                System.out.println(" --> Did not create : " +  vc.get("createName") + ", createFile variable or generatePortlet was not true, .");
+                System.out.println(" --> Did not create : " +  createName + ", createFile variable or generatePortlet was not true, .");
             }
             
         } catch (ResourceNotFoundException ex) {
@@ -360,7 +481,7 @@ public class XMLPortletFactory {
         }
     }
 
-    private static void processValidation(String use_templates, String fileName, CommonData commonData, Application application, String applicationClassName, Applications applications) {
+    private static void processValidation(String use_templates, String file, CommonData commonData, Application application, String applicationClassName, Applications applications) {
         /*
          * Here finds if the application.fileDef.fields.field has a validation in
          * wich case will generate the apropiate DAO, DEF and TBL jsp's needed (getVelocityFilesForValidation)
@@ -372,11 +493,11 @@ public class XMLPortletFactory {
         for (int i = 0; i < field.length; i++) {
             String[] filesValidationList = getVelocityFilesForValidation();
             for (String fileValidation : filesValidationList) {
-                if (fileName.trim().equalsIgnoreCase(fileValidation)) {
+                if (file.trim().equalsIgnoreCase(fileValidation)) {
                     if (field[i].isSetValidation()) {
                         for (Application validationApp : applications.getApplicationArray()) {
                             if (validationApp.getClassDef().getName().equalsIgnoreCase(field[i].getValidation().getClassName())) {
-                                processApplication(use_templates, fileName, commonData, validationApp, applicationClassName, applications);
+                                processApplication(use_templates, file, commonData, validationApp, applicationClassName, applications);
                             }
                         }
                     }
@@ -419,7 +540,13 @@ public class XMLPortletFactory {
             // ARGS ENTERED.
            	properties.setProperty(LASTXML_KEY, args[0]);
            	properties.setProperty(PORLETSDIR_KEY, args[1]);
-           	properties.setProperty(SDK_VERSION, args[2]);
+           	String arg2;
+           	if(args.length > 2) {
+           		arg2 = args[2];
+           	} else {
+           		arg2 = "7.0";
+           	}
+			properties.setProperty(SDK_VERSION, arg2);
            	File file = new File(args[0]);
            	xmlPortletFactory.startConversion(file);
         }

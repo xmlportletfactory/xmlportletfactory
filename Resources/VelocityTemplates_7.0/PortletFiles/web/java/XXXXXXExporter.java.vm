@@ -1,0 +1,161 @@
+#set( $createFile = false)
+#set( $createPath = "${webModuleBasePackagePath}/web" )
+#set( $createName = "/${classDef_name}Exporter.java" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+package ${basePackage}.web;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import javax.portlet.PortletConfig;
+
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
+
+import ${basePackage}.model.${classDef_name};
+import ${basePackage}.service.${classDef_name}LocalServiceUtil;
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+import ${basePackage}.service.${validationTable.getClassDef().getName()}LocalServiceUtil;
+#end
+#end
+#end
+#end
+
+
+public class ${classDef_name}Exporter {
+
+	public static LinkedHashMap<String, String> generateDataHeader(PortletConfig portletConfig, Locale locale) {
+		LinkedHashMap<String,String> dataHeader = new LinkedHashMap<String, String>();
+#foreach($field in $fields)
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+				dataHeader.put(LanguageUtil.get(portletConfig.getResourceBundle(locale),"${application.getClassDef().getName()}-${field.getName()}"),"validation(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})");
+#end
+#end
+#else
+				dataHeader.put(LanguageUtil.get(portletConfig.getResourceBundle(locale),"${application.getClassDef().getName()}-${field.getName()}"),"${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}");
+#end
+#end
+	   return dataHeader;
+	}
+
+	public static Workbook generateSampleExcel(long groupId, PortletConfig portletConfig, Locale locale) throws SystemException {
+		LinkedHashMap dataHeader = generateDataHeader(portletConfig, locale);
+		return generateExcel(groupId,true, true, dataHeader);
+	}
+
+	public static Workbook generateFullExcel(long groupId, PortletConfig portletConfig, Locale locale) throws SystemException  {
+		LinkedHashMap dataHeader = generateDataHeader(portletConfig, locale);
+		return generateExcel(groupId, false, false, dataHeader);
+	}
+
+	public static Workbook generateExcel (long groupId, boolean first, boolean showTypes, LinkedHashMap<String, String> dataHeaders) throws SystemException {
+		Workbook book = new HSSFWorkbook();
+		Sheet sheet = book.createSheet();
+
+		int itRow = 0;
+		int itCell = 0;
+		Row row = null;
+		Cell cell = null;
+
+		row = sheet.createRow(itRow);
+		itRow++;
+		if(showTypes) {
+			Row row2 = sheet.createRow(itRow);
+			itRow++;
+			Cell cell2 = null;
+			for(String key: dataHeaders.keySet()) {
+				//Head
+				cell = row.createCell(itCell);
+				cell.setCellValue(key);
+				//Types
+				cell2 = row2.createCell(itCell);
+				cell2.setCellValue(dataHeaders.get(key));
+				itCell++;
+			}
+		} else {
+			for(String key: dataHeaders.keySet()) {
+				//Head
+				cell = row.createCell(itCell);
+				cell.setCellValue(key);
+				itCell++;
+			}
+		}
+
+		List<${application.getClassDef().getName()}> listEntities = ${application.getClassDef().getName()}LocalServiceUtil.findAllInGroup(groupId);
+		if(first) {
+			if(listEntities.size()>0) {
+				row = sheet.createRow(itRow);
+				${application.getClassDef().getName()} entity = listEntities.get(0);
+				row = generateRow(entity,row);
+				itRow++;
+			}
+		} else  {
+			for(${application.getClassDef().getName()} entity : listEntities){
+				row = sheet.createRow(itRow);
+				row = generateRow(entity,row);
+				itRow++;
+			}
+		}
+
+		//Autosize columns
+		for(int x = 0; x<(itCell+1) ; x++) {
+			sheet.autoSizeColumn(x);
+		}
+		return book;
+	}
+
+	public static Row generateRow(${application.getClassDef().getName()} entity, Row row) throws SystemException  {
+
+		int column = 0;
+
+		Cell cell = null;
+#set ($i =1)
+#foreach($field in $fields)
+
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}!="calculated")
+		cell = row.createCell(column);
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+		cell.setCellValue("IMAGE");
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+		cell.setCellValue("DOCUMENT");
+#elseif(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+		try {
+			cell.setCellValue(${validationTable.getClassDef().getName()}LocalServiceUtil.get${validationTable.getClassDef().getName()}(entity.get#GetSetFieldName($i)()).get${field.getValidation().getOrderByField().substring(0,1).toUpperCase()}${field.getValidation().getOrderByField().substring(1)}());
+		} catch (PortalException ex) {
+			ex.printStackTrace();
+			cell.setCellValue("ERROR");
+		}
+#end
+#end
+#else
+		cell.setCellValue(entity.get#GetSetFieldName($i)());
+#end
+	    column++;
+#end
+#set ( $i = $i + 1)
+#end
+
+	    return row;
+	}
+
+}
+
+

@@ -1,0 +1,41 @@
+#set( $createPath = "${webModulePath}/src/main/resources/resource-actions" )
+#set( $createName = "/default.xml" )
+<?xml version="1.0"?>
+<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.0.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_0_0.dtd">
+<resource-action-mapping>
+#foreach($table in $applications)
+	<portlet-resource>
+		<portlet-name>$helper.getPortletName($table)</portlet-name>
+		<permissions>
+			<supports>
+#if ($table.getClassDef().isSetShowInControlPanel())
+#if ($table.getClassDef().getShowInControlPanel() == "true")
+				<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+				<action-key>ADD_TO_PAGE</action-key>
+#end
+#end
+				<action-key>CONFIGURATION</action-key>
+				<action-key>VIEW</action-key>
+			</supports>
+			<site-member-defaults>
+				<action-key>VIEW</action-key>
+			</site-member-defaults>
+			<guest-defaults>
+				<action-key>VIEW</action-key>
+			</guest-defaults>
+#if ($table.getClassDef().isSetShowInControlPanel())
+#if ($table.getClassDef().getShowInControlPanel() == "true")
+			<guest-unsupported>
+				<action-key>ACCESS_IN_CONTROL_PANEL</action-key>
+			</guest-unsupported>
+
+#else
+			<guest-unsupported/>
+#end
+#else
+		<guest-unsupported/>
+#end
+		</permissions>
+	</portlet-resource>
+#end
+</resource-action-mapping>

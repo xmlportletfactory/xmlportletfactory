@@ -1,0 +1,170 @@
+
+#set( $createPath = "${webModuleBasePackagePath}/web" )
+#set( $createName = "/${classDef_name}Validator.java" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+package ${basePackage}.web;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.portlet.ActionRequest;
+
+import ${basePackage}.model.${classDef_name};
+#set ($hasImages="false")
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($hasImages="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+import ${basePackage}.service.${validationTable.getClassDef().getName()}LocalServiceUtil;
+import ${basePackage}.exception.NoSuch${validationTable.getClassDef().getName()}Exception;
+#end
+#end
+#end
+#end
+
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.ParamUtil;
+
+public class ${classDef_name}Validator {
+
+	public static ArrayList<String> validate${classDef_name}(${classDef_name} ${classInstance}, ActionRequest request) throws IOException {
+		ArrayList<String> errors = new ArrayList<String>();
+		Properties props = new Properties();
+		ClassLoader classLoader = ${classDef_name}Validator.class.getClassLoader();
+		InputStream is = classLoader.getResourceAsStream("regexp.properties");
+		props.load(is);
+
+#set ($i =0)
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#set ( $i = $i + 1)
+#set ($arrayIter = ${i} - 1)
+#if($i!=1)
+
+#set ($validate="true")
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($validate="false")
+#end
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($validate="false")
+#end
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="date")
+#set ($validate="false")
+#end
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="datetime")
+#set ($validate="false")
+#end
+#if(${field.isSetValidation()})
+#set ($validate="false")
+#end
+#if($validate=="true")
+	//Field ${field.getName()}
+	
+	
+#if(${hasImages}=="true" || ${hasDocuments}=="true")
+		if(!validate#GetSetFieldName($i)(props, request.getAttribute("${field.getName()}").toString())){
+#else
+		if(!validate#GetSetFieldName($i)(props, ParamUtil.getString(request, "${field.getName()}"))){
+#end
+#if(${field_regexp.get(${arrayIter})})
+			errors.add(props.getProperty("${field_regexp.get(${arrayIter})}_error"));
+#else
+#if(${fieldTypes.get(${arrayIter})}=="int" || ${fieldTypes.get(${arrayIter})}=="float" || ${fieldTypes.get(${arrayIter})}=="double" || ${fieldTypes.get(${arrayIter})}=="numeric" || ${fieldTypes.get(${arrayIter})}=="long")
+		    errors.add("error_number_format");
+#else
+		    errors.add("error");
+#end
+#end
+		}
+#if(${field.getRequired()}==true)
+#if(${fieldTypes.get(${arrayIter})}=="string" || ${fieldTypes.get(${arrayIter})}=="varchar" || ${fieldTypes.get(${arrayIter})}=="text" || ${fieldTypes.get(${arrayIter})}=="richtext" || ${fieldTypes.get(${arrayIter})}=="documentlibrary")
+		if (Validator.isNull(${classInstance}.get#GetSetFieldName($i)())) {
+			errors.add("${fileDef_name.toLowerCase()}-${field.getName().toLowerCase()}-required");
+		}
+#end
+#end
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+		try {
+			${validationTable.getClassDef().getName()}LocalServiceUtil.get${validationTable.getClassDef().getName()}(${classInstance}.get${field.getName().substring(0,1).toUpperCase()}${field.getName().substring(1)}());
+		} catch (NoSuch${validationTable.getClassDef().getName()}Exception e){
+			errors.add("${fileDef_name.toLowerCase()}-${field.getName().toLowerCase()}-required");
+		} catch (PortalException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SystemException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+#end
+#end
+#end
+#end
+#end
+		return errors;
+	}
+
+	public static boolean validateEdit${classDef_name}(
+		String rowsPerPage, String dateFormat, String datetimeFormat, List errors) {
+		boolean valid = true;
+		if (Validator.isNull(rowsPerPage)) {
+			errors.add("rows-per-page-required");
+			valid = false;
+		} else if (!Validator.isNumber(rowsPerPage)) {
+			errors.add("rows-per-page-invalid");
+			valid = false;
+		} else if (Validator.isNull(dateFormat)) {
+			errors.add("date-format-required");
+			valid = false;
+		} else if (Validator.isNull(datetimeFormat)) {
+			errors.add("datetime-format.required");
+			valid = false;
+		}
+		return valid;
+	}
+
+#set ($i =0)
+#foreach($field in $fields)
+#set ( $i = $i + 1)
+#set ($arrayIter = ${i} - 1)
+#set ($regexp=${field_regexp.get(${arrayIter})})
+	//Field ${field.getName()}
+	private static boolean validate#GetSetFieldName(${i})(Properties props,String field) {
+		boolean valid = true;
+#if(${field_regexp.get(${arrayIter})})
+		if(!field.equals("")) {
+			Pattern p = Pattern.compile(props.getProperty("${field_regexp.get(${arrayIter})}"),Pattern.CASE_INSENSITIVE);
+			Matcher m = p.matcher((CharSequence) field.trim());
+			valid = m.matches();
+		}
+#else
+#if(${fieldTypes.get(${arrayIter})}=="int" || ${fieldTypes.get(${arrayIter})}=="float" || ${fieldTypes.get(${arrayIter})}=="double" || ${fieldTypes.get(${arrayIter})}=="numeric" || ${fieldTypes.get(${arrayIter})}=="long")
+		try {
+			Double.parseDouble(field);
+		} catch (NumberFormatException nfe) {
+		    valid = false;
+		}
+#end
+#end
+		return valid;
+	}
+#end
+}

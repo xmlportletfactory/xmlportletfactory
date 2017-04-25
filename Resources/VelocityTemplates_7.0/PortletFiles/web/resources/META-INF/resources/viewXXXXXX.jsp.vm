@@ -1,0 +1,261 @@
+
+#set( $createPath = "${webResourcesPath}/${snakeCaseEntityName}" )
+#set( $createName = "/view_${snakeCaseEntityName}.jsp" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+<%@include file="../init.jsp" %>
+<%@ page import="${basePackage}.model.${classDef_name}" %>
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#end
+#if($hasDocuments == "true")
+<%@ page import="com.liferay.document.library.kernel.model.DLFileEntry" %>
+<%@ page import="com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil" %>
+#end
+<%@ page import="com.liferay.portal.kernel.util.StringPool" %>
+<%@ page import="com.liferay.portal.kernel.util.HttpUtil" %>
+<%@ page import="com.liferay.portal.kernel.util.HtmlUtil" %>
+<%@ page import="javax.script.ScriptEngine" %>
+<%@ page import="javax.script.ScriptEngineManager" %>	
+#if ($hasWorkflow)
+<%@ page import="com.liferay.portal.service.WorkflowDefinitionLinkLocalServiceUtil" %>
+#end
+#if ($asset)
+<%@ page import="java.lang.Boolean" %>
+#end
+
+#foreach($field in $fields)
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+<%@ page import="${basePackage}.model.impl.${validationTable.getClassDef().getName()}Impl" %>
+#end
+#end
+#end
+#end
+
+<jsp:useBean class="java.lang.String" id="edit${application.getClassDef().getName()}URL" scope="request" />
+<jsp:useBean id="${classInstance}" type="${basePackage}.model.${classDef_name}" scope="request"/>
+
+#foreach($field in $fields)
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+<jsp:useBean id="${field.getName()}List" type="java.util.List" scope="request" />
+#end
+#end
+#end
+#end
+
+<portlet:defineObjects />
+
+#if ($asset)
+<% boolean fromAsset = (request.getAttribute("fromAsset") !=null ? (Boolean) request.getAttribute("fromAsset"): false); %>
+#end
+
+
+<portlet:renderURL var="redirect"></portlet:renderURL>
+
+<div "class="container-fluid-1280">
+
+#if ($asset)
+#if (!$assetTitleExist)
+			<span> <liferay-ui:message key="title" /></span>
+			<%= ${classInstance}.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}()  %>
+			
+#end
+#if (!$assetSummaryExist)
+			<span> <liferay-ui:message key="title" /></span>
+			<%= ${classInstance}.get${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}() %>		
+#end
+#end
+
+
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#set ($i = 0)
+#foreach($field in $fields)
+#set($fieldType = ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#set ($i = $i + 1)
+#set ($arrayIter = ${i} - 1)
+#if ($i > 1)		
+#if ($fieldType == "calculated")
+#set ($calculatedFieldName = ${field.getName()})
+#set ($calculatedFieldTitle = ${field.getTitle()})
+#set ($formula = ${field.getType().getCalculated().replaceAll(" ","")})
+#set ($formulaType = ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#set ($formulaDelims = "[+-/*()0-9]+")
+		<%	
+			String ${calculatedFieldName}Incoming = "${formula}";
+			
+			String ${calculatedFieldName}Delims = "(?<=op)|(?=op)".replace("op", "[-+*/()]");
+			
+			String[] ${calculatedFieldName}Tokens = ${calculatedFieldName}Incoming.split(${calculatedFieldName}Delims);
+			
+			StringBuilder ${calculatedFieldName}SB = new StringBuilder();
+
+			for (int i = 0; i < ${calculatedFieldName}Tokens.length; i++) {
+#set ($showElse = "")
+#set ( $array = [] )
+#foreach ($formulaField in $formula.split($formulaDelims))
+#if ($formulaField!="")
+#set ($isTempField = false)
+#set ($tempFields = $application.getFileDef().getFields().getFieldArray())
+#foreach($tempField in $tempFields)
+#set($tempFieldType = ${tempField.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#set($tempFieldName = ${tempField.getName()})
+#if (${tempFieldName} == ${formulaField})
+#set ($isDuplicate = false)
+#set ($temp = $array.add("${formulaField}"))
+#set ($count = 0)
+#foreach ($duplicate in $array)
+#if ($duplicate == ${formulaField})
+#set ($count = $count + 1)
+#end
+#if ($count > 1)
+#set ($isDuplicate = true)
+#end
+#end
+#end
+#if (${tempFieldType} == ${formulaType} && ${tempFieldName} == ${formulaField})
+#set ($isTempField = true)
+#end
+#end
+#if (${isDuplicate} == false) 
+#if (${isTempField} == false)        
+				$showElse if ( ${calculatedFieldName}Tokens[i].toString().equals("${formulaField}") ) {
+	            	${calculatedFieldName}SB.append(String.valueOf(${classInstance}.get${formulaField.substring(0,1).toUpperCase()}${formulaField.substring(1)}()));
+	            }
+#else
+	            $showElse if ( ${calculatedFieldName}Tokens[i].toString().equals("${formulaField}") ) {
+	            	${calculatedFieldName}SB.append(String.valueOf(${formulaField}));
+	            }
+#end
+#end
+#set ($showElse = "else")
+#end
+#end
+	            else {
+	            	${calculatedFieldName}SB.append(${field.getName()}Tokens[i].toString());
+	            }
+	        } 		
+			
+			ScriptEngineManager ${calculatedFieldName}Mgr = new ScriptEngineManager();
+        	ScriptEngine ${calculatedFieldName}Engine = ${calculatedFieldName}Mgr.getEngineByName("JavaScript");
+        	String ${calculatedFieldName} = ${calculatedFieldName}Engine.eval(${calculatedFieldName}SB.toString()).toString();
+		%>
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+#if ($isDetail=="true" && $detailField == ${field.getName()})
+			<span class="aui-field-content">
+			<%
+				for (int i=0;i<${field.getName()}List.size();i++) {
+					${validationTable.getClassDef().getName()}Impl ${validationTable.getFileDef().getName()}Selector = (${validationTable.getClassDef().getName()}Impl)${field.getName()}List.get(i);
+					if (${validationTable.getFileDef().getName()}Selector.getPrimaryKey() == ${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)() ) {
+			%>
+				<label class="aui-field-label"> 
+					<liferay-ui:message key="${application.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}" />
+				</label>
+				<span class="aui-field-element">
+				<%= ${validationTable.getFileDef().getName()}Selector.getPrimaryKey() %> - <%= ${validationTable.getFileDef().getName()}Selector.get${field.getValidation().getOrderByField().substring(0,1).toUpperCase()}${field.getValidation().getOrderByField().substring(1)}() %>
+				</span>			
+			<%
+				    }
+			    } %>
+			</span>
+#else
+#set ($selectInserted="false")
+
+			<span class="aui-field-content">			
+			<%			
+			for (int i=0;i<${field.getName()}List.size();i++) {
+					${validationTable.getClassDef().getName()}Impl ${validationTable.getFileDef().getName()}Selector = (${validationTable.getClassDef().getName()}Impl)${field.getName()}List.get(i);
+
+				  if (${validationTable.getFileDef().getName()}Selector.getPrimaryKey() == ${classInstance}.get$field.getName().substring(0,1).toUpperCase()$field.getName().substring(1)() ) {					
+			%>
+				<label class="aui-field-label">
+				<liferay-ui:message key="${application.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}" />
+				</label>
+				<span class="aui-field-element">
+				<%= ${validationTable.getFileDef().getName()}Selector.get${field.getValidation().getOrderByField().substring(0,1).toUpperCase()}${field.getValidation().getOrderByField().substring(1)}() %>
+				</span>
+			<%
+				 }
+			}
+				
+			%>
+			</span>
+	
+#end
+#end
+#end
+#else
+
+			<span class="aui-field-content">
+				<label class="aui-field-label"> 
+					<liferay-ui:message key="${application.getFileDef().getName().toLowerCase()}-${field.getName().toLowerCase()}" />
+				</label>
+				<span class="aui-field-element">
+#if ($fieldType == "calculated")
+					<%= ${calculatedFieldName} %>
+#else
+					<%= ${classInstance}.get${field.getName().substring(0,1).toUpperCase()}${field.getName().substring(1)}() %>
+#end						
+				</span>
+			</span>
+#end
+#end
+#end
+
+
+#if ($assetRatings)
+		<liferay-ui:ratings className="<%= ${classDef_name}.class.getName() %>"
+    				classPK="<%= ${classInstance}.getPrimaryKey() %>" type="stars" />
+			
+#end
+#if ($assetCategories)
+		<liferay-ui:asset-categories-summary className="<%=${classDef_name}.class.getName() %>" classPK="<%=${classInstance}.getPrimaryKey() %>" />	
+#end
+#if ($assetTags)
+		<liferay-ui:asset-tags-summary className="<%=${classDef_name}.class.getName() %>" classPK="<%=${classInstance}.getPrimaryKey() %>" />	
+#end	   
+#if ($assetDiscussion)
+
+	
+		<liferay-ui:panel-container extended="<%= false %>"
+					id="${classDef_name}CommentsPanelContainer" persistState="<%= true %>">
+	
+					<liferay-ui:panel collapsible="<%= true %>" extended="<%= true %>" id="${classDef_name}CommentsPanel" persistState="<%= true %>"
+	        				title='<%= LanguageUtil.get(locale, "comments") %>'>
+	
+						<portlet:actionURL name="invokeTaglibDiscussion" var="discussionURL" />
+	
+						<liferay-ui:discussion className="<%= ${classDef_name}.class.getName() %>"
+	            				classPK="<%= ${classInstance}.getPrimaryKey() %>"
+	            				formAction="<%= discussionURL %>" formName="${classDef_name}CommentsForm"
+	            				ratingsEnabled="<%= true %>" redirect="<%= redirect %>"
+	            				subject="<%= ${classInstance}.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}() %>"
+	            				userId="<%= ${classInstance}.getUserId() %>" />
+	
+					</liferay-ui:panel>
+	
+		</liferay-ui:panel-container>		
+	
+#end	   
+#if ($assetRelated)
+		<liferay-ui:panel defaultState="closed" extended="<%= false %>" 
+					id="${classDef_name}EntryAssetLinksPanel" persistState="<%= true %>" title="related-assets">
+					<aui:fieldset>
+						<liferay-ui:input-asset-links className="<%= ${classDef_name}.class.getName() %>" classPK="<%= ${classInstance}.getPrimaryKey() %>"/>
+					</aui:fieldset>
+		</liferay-ui:panel>		
+
+#end	   
+
+</div>

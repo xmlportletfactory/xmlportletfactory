@@ -1,0 +1,9 @@
+#set( $targetFile = "${apiModuleBasePackagePath}/constants/${upperCamelCaseProjectName}PortletKeys.java" )
+
+package ${basePackage}.constants;
+
+public class ${upperCamelCaseProjectName}PortletKeys {
+
+	public static final String POLLS =
+		"${basePackage.replace("\\.", "_")}_web_portlet_${upperCamelCaseProjectName}Portlet";
+}

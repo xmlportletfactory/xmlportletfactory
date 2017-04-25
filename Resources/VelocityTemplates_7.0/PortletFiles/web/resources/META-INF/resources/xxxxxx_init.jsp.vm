@@ -1,0 +1,10 @@
+
+#set( $createPath = "${webResourcesPath}/${snakeCaseEntityName}" )
+#set( $createName = "/init.jsp" )
+
+<%@ include file="../init.jsp" %>
+<%@ page import="${basePackage}.web.display.context.${classDef_name}DisplayContext" %>
+
+<%
+${classDef_name}DisplayContext ${classInstance}DisplayContext = new ${classDef_name}DisplayContext(renderRequest, renderResponse);
+%>
