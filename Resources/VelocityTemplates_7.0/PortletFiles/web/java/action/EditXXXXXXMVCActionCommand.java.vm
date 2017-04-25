@@ -1,0 +1,695 @@
+#set( $targetFile = "${webModuleBasePackagePath}/web/portlet/action/Edit${classDef_name}MVCActionCommand.java")
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+package ${basePackage}.web.portlet.action;
+
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.Event;
+import javax.portlet.EventRequest;
+import javax.portlet.EventResponse;
+import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequestDispatcher;
+import javax.portlet.PortletURL;
+import javax.portlet.ProcessAction;
+import javax.portlet.ProcessEvent;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletConfig;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import com.liferay.portal.kernel.dao.search.SearchContainer;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.portlet.PortletFileUpload;
+
+import ${basePackage}.exception.NoSuch${classDef_name}Exception;
+import ${basePackage}.model.${classDef_name};
+import ${basePackage}.model.impl.${classDef_name}Impl;
+import ${basePackage}.service.${classDef_name}LocalServiceUtil;
+import ${basePackage}.service.permission.${classDef_name}Permission;
+import ${basePackage}.service.permission.${classDef_name}EntryPermission;
+import ${basePackage}.web.${classDef_name}Validator;
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+// needed for ${application.getClassDef().getName()} detail-file ${detailfile.getDetailFileClassName()}
+#foreach($detailapplication in $applications)
+#if (${detailapplication.getClassDef().getName()} == ${detailfile.getDetailFileClassName()})
+import ${basePackage}.service.${detailapplication.getClassDef().getName()}LocalServiceUtil;
+import ${basePackage}.web.${detailapplication.getClassDef().getName()}Comparator;
+#end
+#end
+#end
+
+#set($masterName="")
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
+#set($masterName = ${tabledetail.getClassDef().getName()})
+import ${basePackage}.service.${masterName}LocalServiceUtil;
+import ${basePackage}.model.${masterName};
+import ${basePackage}.web.${masterName}Comparator;
+#end
+#end
+#end
+
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($hasDocuments="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+import ${basePackage}.model.${validationTable.getClassDef().getName()};
+import ${basePackage}.service.${validationTable.getClassDef().getName()}LocalServiceUtil;
+import ${basePackage}.web.${validationTable.getClassDef().getName()}Comparator;
+#end
+#end
+#end
+#end
+import ${basePackage}.util.${classDef_name}Util;
+import ${basePackage}.web.${classDef_name}Comparator;
+
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchContextFactory;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.PortalUtil;
+
+#if($hasDocuments) 
+import ${basePackage}.web.${classDef_name}Upload;
+#end
+
+@Component(
+	immediate = true,
+	property = {
+		"javax.portlet.name=${portletName}",
+		"mvc.command.name=/${snakeCaseEntitiesName}/edit_${snakeCaseEntityName}"
+	},
+	service = MVCActionCommand.class
+)
+public class Edit${classDef_name}MVCActionCommand extends BaseMVCActionCommand {
+
+
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+		try {
+			if (cmd.equals(Constants.ADD)) {
+				add${classDef_name}(actionRequest, actionResponse);
+			}
+			else if (cmd.equals(Constants.UPDATE)) {
+				update${classDef_name}(actionRequest, actionResponse);
+			}
+			else if (cmd.equals(Constants.DELETE)) {
+				delete${classDef_name}(actionRequest, actionResponse);
+			}
+		}
+		catch (Exception e) {
+			if (e instanceof NoSuch${classDef_name}Exception ||
+				e instanceof PrincipalException) {
+
+				SessionErrors.add(actionRequest, e.getClass());
+
+				actionResponse.setRenderParameter(
+					"mvcPath", "/${snakeCaseEntitiesName}/error.jsp");
+			}
+#if($asset)			
+			else if (e instanceof AssetCategoryException ||
+					 e instanceof AssetTagException) {
+
+				SessionErrors.add(actionRequest, e.getClass(), e);
+			}
+#end			
+			else {
+				throw e;
+			}
+		}
+		
+##		actionResponse.setRenderParameter("mvc.command.name","/${snakeCaseEntitiesName}/edit_${snakeCaseEntityName}");
+	}
+
+## TODO ?
+#*
+##	@ProcessAction(name = "new${classDef_name}")
+	public void new${classDef_name}(ActionRequest request, ActionResponse response) throws Exception{
+		${classDef_name}Util.addParametersForAdd(response);
+#if ($asset)
+		boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+		
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+		response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)
+		if (!fromAsset){
+#end
+        	QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+        	response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+
+#set($firstField="false")
+#if ($asset)
+		}
+#end
+#end
+#end
+	}
+*#
+	private void add${classDef_name}(ActionRequest request, ActionResponse response) throws Exception {
+#if(${hasDocuments}=="true")
+            boolean isMultipart = PortletFileUpload.isMultipartContent(request);
+            if (isMultipart) {
+            	uploadManager = new ${classDef_name}Upload();
+				request = extractFields(request,false);
+            }
+#end
+            ${classDef_name} ${classInstance} = ${classDef_name}FromRequest(request);
+	    ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+	    PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+	    if (!${classDef_name}Permission.contains(
+					permissionChecker, themeDisplay.getScopeGroupId(), "ADD_${classDef_name.toUpperCase()}")){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+	    }
+            ArrayList<String> errors = ${classDef_name}Validator.validate${classDef_name}(${classInstance}, request);
+
+            if (errors.isEmpty()) {
+#if(${hasDocuments}=="true")
+	            ${classInstance} = uploadManager.uploadFiles(request,${classInstance});
+#end
+		try {
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(${classDef_name}.class.getName(), request);
+			${classDef_name}LocalServiceUtil.add${classDef_name}(${classInstance}, serviceContext);
+
+			${classDef_name}Util.addParametersForDefaultView(response);
+                	SessionMessages.add(request, "${fileDef_name.toLowerCase()}-added-successfully");
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+		        response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)			
+			
+			if (!fromAsset) {
+#end
+## TODO ?
+#*
+                	QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+                	response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+*#
+#if ($asset)
+	
+			} 
+#end
+#set($firstField="false")
+#end
+#end
+
+            	} catch (Exception cvex) {
+            		SessionErrors.add(request, "please-enter-a-unique-code");
+			PortalUtil.copyRequestParameters(request, response);			
+			${classDef_name}Util.addParametersForAddWithErrors(response);		
+            	}
+            } else {
+                for (String error : errors) {
+                        SessionErrors.add(request, error);
+                }
+		PortalUtil.copyRequestParameters(request, response);			
+		${classDef_name}Util.addParametersForAddWithErrors(response);	
+            }
+	}
+
+## TODO ?
+#*
+	private void event${classDef_name}(ActionRequest request, ActionResponse response)
+			throws Exception {
+		long key = ParamUtil.getLong(request, "resourcePrimKey");
+		int containerStart = ParamUtil.getInteger(request, "containerStart");
+		int containerEnd = ParamUtil.getInteger(request, "containerEnd");
+		int cur = ParamUtil.getInteger(request, "cur");
+		String orderByType = ParamUtil.getString(request, "orderByType");
+		String orderByCol = ParamUtil.getString(request, "orderByCol");
+		String ${classDef_name.toLowerCase()}Filter = ParamUtil.getString(request, "${classDef_name}Filter");
+		if (Validator.isNotNull(key)) {
+            		response.setRenderParameter("highlightRowWithKey", Long.toString(key));
+            		response.setRenderParameter("containerStart", Integer.toString(containerStart));
+            		response.setRenderParameter("containerEnd", Integer.toString(containerEnd));
+			response.setRenderParameter("cur", Integer.toString(cur));
+			response.setRenderParameter("orderByType", orderByType);
+			response.setRenderParameter("orderByCol", orderByCol);
+			response.setRenderParameter("${classDef_name}Filter", ${classDef_name.toLowerCase()}Filter);
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+	
+			if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+            		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            		response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+			}
+#end
+		}
+	}
+*#
+
+##	@ProcessAction(name = "edit${classDef_name}")
+
+	public void edit${classDef_name}(ActionRequest request, ActionResponse response)
+			throws Exception {
+		long key = ParamUtil.getLong(request, "resourcePrimKey");
+		if (Validator.isNotNull(key)) {
+			${classDef_name}Util.addParametersForEdit(response, key);
+			
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+			
+			if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+#*
+            		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            		response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+*#
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+			}
+#end
+		}
+	}
+
+##	@ProcessAction(name = "delete${classDef_name}")
+	public void delete${classDef_name}(ActionRequest request, ActionResponse response)throws Exception {		
+
+		long id = ParamUtil.getLong(request, "resourcePrimKey");
+
+		if (Validator.isNotNull(id)) {
+			ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+			PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+			if (!${classDef_name}EntryPermission.contains(
+					permissionChecker, id, ActionKeys.DELETE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+			}
+
+			${classDef_name} ${classInstance} = ${classDef_name}LocalServiceUtil.get${classDef_name}(id);
+			${classDef_name}LocalServiceUtil.delete${classDef_name}Entry(${classInstance});
+			SessionMessages.add(request, "${fileDef_name.toLowerCase()}-deleted-successfully");
+            		response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+			
+			if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+## TODO ?
+#*
+            		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            		response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+*#
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+			}
+#end
+		} else {
+			SessionErrors.add(request, "${fileDef_name.toLowerCase()}-error-deleting");
+		}
+	}
+
+#if ($hasTrash)
+##	@ProcessAction(name = "moveToTrash${classDef_name}")
+	public void moveToTrash${classDef_name}(ActionRequest request, ActionResponse response)throws Exception {		
+
+		long id = ParamUtil.getLong(request, "resourcePrimKey");
+
+		if (Validator.isNotNull(id)) {
+			ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+			PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+			if (!${classDef_name}EntryPermission.contains(
+					permissionChecker, id, ActionKeys.DELETE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+			}
+
+			${classDef_name} ${classInstance} = ${classDef_name}LocalServiceUtil.get${classDef_name}(id);
+			${classDef_name}LocalServiceUtil.moveEntryToTrash(themeDisplay.getUserId(), ${classInstance});
+
+			Map<String, String[]> data = new HashMap<String, String[]>();
+
+			long[] deleteEntryIds = new long[] {id};		
+
+			data.put(
+				"deleteEntryClassName",
+				new String[] {${classDef_name}.class.getName()});
+#if ($asset)
+			String deleteEntryTitle = ${classInstance}.get${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}();
+
+			if (Validator.isNotNull(deleteEntryTitle)) {
+				data.put("deleteEntryTitle", new String[] {deleteEntryTitle});
+			}
+#end
+
+			data.put(
+				"restoreEntryIds", ArrayUtil.toStringArray(deleteEntryIds));
+
+			SessionMessages.add(
+				request,
+				PortalUtil.getPortletId(request) +
+					SessionMessages.KEY_SUFFIX_DELETE_SUCCESS_DATA, data);
+
+			//hideDefaultSuccessMessage(request);			
+
+			
+            		response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)
+			boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+			
+			if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+#*
+            		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            		response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+*#
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+			}
+#end
+		} else {
+			SessionErrors.add(request, "${fileDef_name.toLowerCase()}-error-deleting");
+		}
+	}
+
+	private void restoreEntry${classDef_name}(ActionRequest request, ActionResponse response)throws Exception {
+	
+		long[] restoreEntryIds = StringUtil.split(
+			ParamUtil.getString(request, "restoreEntryIds"), 0L);
+
+		for (long restoreEntryId : restoreEntryIds) {
+			ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+			PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+			if (!${classDef_name}EntryPermission.contains(
+					permissionChecker, restoreEntryId, ActionKeys.DELETE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+			}
+
+			${classDef_name}LocalServiceUtil.restoreEntryFromTrash(themeDisplay.getUserId(), restoreEntryId);
+		}
+	}
+
+#end
+
+	private void update${classDef_name}(ActionRequest request, ActionResponse response) throws Exception {
+#if(${hasDocuments}=="true")
+            boolean isMultipart = PortletFileUpload.isMultipartContent(request);
+            if (isMultipart) {
+				uploadManager = new ${classDef_name}Upload();
+				request = extractFields(request,true);
+            }
+#end
+            ${classDef_name} ${classInstance} = ${classDef_name}FromRequest(request);
+	    ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+	    PermissionChecker permissionChecker = themeDisplay.getPermissionChecker();
+
+	    if (!${classDef_name}EntryPermission.contains(
+				permissionChecker, ${classInstance}, ActionKeys.UPDATE)){	
+				${classDef_name}Util.addParametersForDefaultView(response);						
+				SessionErrors.add(request, "permission-error");
+				return;
+	     }
+
+            ArrayList<String> errors = ${classDef_name}Validator.validate${classDef_name}(${classInstance}, request);
+
+#if ($asset)
+	     boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+
+#end
+#if(${hasDocuments}=="true")
+		    ${classInstance} = uploadManager.uploadFiles(request, ${classInstance});
+#end
+            if (errors.isEmpty()) {
+            	try {
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(${classDef_name}.class.getName(), request);
+                	${classDef_name}LocalServiceUtil.update${classDef_name}(${classInstance}, serviceContext);
+
+			${classDef_name}Util.addParametersForDefaultView(response);
+                	SessionMessages.add(request, "${fileDef_name.toLowerCase()}-updated-successfully");
+
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+		        response.setRenderParameter("${fieldNames.get(0)}", "0");
+#if ($asset)			
+			
+			if (!fromAsset) {
+#end
+#* 
+                	QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+                	response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "${detailfile.getConnectionFieldName()}"));
+*#
+#if ($asset)
+			}
+#end
+#set($firstField="false")
+#end
+#end
+            	} catch (Exception cvex) {
+            	    SessionErrors.add(request, "please-enter-a-unique-code");
+		    		${classDef_name}Util.addParametersForEdit(response, null);
+					request.setAttribute("${classInstance}",${classInstance});
+            	}
+            } else {
+                for (String error : errors) {
+                        SessionErrors.add(request, error);
+                }
+				${classDef_name}Util.addParametersForEdit(response, Long.toString(${classInstance}.getPrimaryKey()));
+				request.setAttribute("${classInstance}",${classInstance});
+            }
+#if ($asset)	   			
+	    if (!fromAsset) {
+#end
+#set($firstField="true")
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+#if(${firstField}=="true")
+#*
+	    	QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile.getConnectionFieldName()}");
+            response.setEvent(qName${application.getClassDef().getName()}, ParamUtil.getString(request, "0"));
+*#
+#set($firstField="false")
+#end
+#end
+#if ($asset)
+	    }
+#end
+        }
+
+	
+	private void set${classDef_name}Pref(ActionRequest request, ActionResponse response) throws Exception {
+
+		String rowsPerPage = ParamUtil.getString(request, "rows-per-page");
+		String viewType = ParamUtil.getString(request, "view-type");
+		String dateFormat = ParamUtil.getString(request, "date-format");
+		String datetimeFormat = ParamUtil.getString(request, "datetime-format");
+
+		ArrayList<String> errors = new ArrayList();
+		if (${classDef_name}Validator.validateEdit${classDef_name}(rowsPerPage, dateFormat, datetimeFormat, errors)) {
+			response.setRenderParameter("rows-per-page", "");
+			response.setRenderParameter("date-format", "");
+			response.setRenderParameter("datetime-format", "");
+			response.setRenderParameter("view-type", "");
+
+			PortletPreferences prefs = request.getPreferences();
+
+			prefs.setValue("rows-per-page", rowsPerPage);
+			prefs.setValue("view-type", viewType);
+			prefs.setValue("date-format", dateFormat);
+			prefs.setValue("datetime-format", datetimeFormat);
+			prefs.store();
+
+			SessionMessages.add(request, "prefs-success");
+		}
+	}
+
+#*
+
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
+	@ProcessEvent(qname="{http://liferay.com/events}${tabledetail.getClassDef().getName()}.${detailfile.getConnectionFieldName()}")
+	public void reciveEvent(EventRequest request, EventResponse response) throws Exception {
+		Event event = request.getEvent();
+		String ${detailfile.getConnectionFieldName()} = (String)event.getValue();
+		request.getPortletSession().setAttribute("${detailfile.getConnectionFieldName()}",${detailfile.getConnectionFieldName()});
+		response.setRenderParameter("${detailfile.getConnectionFieldName()}", ${detailfile.getConnectionFieldName()});
+#if ($asset)
+		boolean fromAsset = ${classDef_name}Util.isFromAsset(request);
+			
+		if (!fromAsset) {
+#end
+### #foreach($detailfile2 in $application.getDetailFiles().getDetailFileArray())
+		QName qName${application.getClassDef().getName()} = new QName("http://liferay.com/events", "${application.getClassDef().getName()}.${detailfile2.getConnectionFieldName()}");
+		response.setEvent(qName${application.getClassDef().getName()}, "0");
+### #end
+#if ($asset)
+		}
+#end
+	}
+#end
+#end
+#end
+
+*#
+
+#if(${hasDocuments}=="true")
+	private ActionRequest extractFields(ActionRequest request,boolean edit) throws FileUploadException{
+
+		FileItemFactory factory = new DiskFileItemFactory();
+        	PortletFileUpload uploadItems = new PortletFileUpload(factory);
+        	List <FileItem>allItems = uploadItems.parseRequest(request);
+         	//Separate formFields <-> fileItems
+         	for(FileItem item : allItems){
+         		String formField = item.getFieldName();
+         		if (item.isFormField()) {
+         			//Non-file items
+         			//Push all to request object
+					String portletName = "_"+request.getAttribute(WebKeys.PORTLET_ID)+"_";
+					if(formField.startsWith(${classDef_name}Upload.HIDDEN)) {
+						uploadManager.addHidden(formField,Long.parseLong(item.getString()));
+					} else if (formField.endsWith(${classDef_name}Upload.DOCUMENT_DELETE)) {
+						int pos = formField.indexOf(${classDef_name}Upload.DOCUMENT_DELETE);
+						formField = formField.substring(0,pos-1);
+						formField = formField.replaceAll(portletName, "");
+						if(item.getString().equals("true")) uploadManager.addDeleted(formField);
+					} else {
+						formField=formField.replaceAll(portletName, "");
+						try {
+					    	request.setAttribute(formField,item.getString("UTF-8").trim());
+						} catch (Exception e) {
+						}
+					}
+         		} else {
+
+         			uploadManager.add(item);
+         		}
+         	}
+		return request;
+	}
+#end
+#set ($hasChainValidations="false")
+#foreach($field in $fields)
+#if (${field.isSetValidation()})
+#if (${field.getValidation().isSetDepends()})
+#set ($hasChainValidations="true")
+#end
+#end
+#end
+
+#parse("/Resources/VelocityTemplates_7.0/PortletFiles/web/java/action/XXXXXXFromRequest.java_method.inc.vm")
+
+#if(${hasDocuments}=="true")
+	private ${classDef_name}Upload uploadManager;
+#end
+
+}

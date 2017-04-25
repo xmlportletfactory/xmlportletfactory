@@ -1,0 +1,25 @@
+
+#set( $createPath = "${webResourcesPath}/${snakeCaseEntityName}" )
+#set( $createName = "/navigation_bar.jsp" )
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+<%@include file="../init.jsp" %>
+
+<jsp:useBean id="${file_name}FilterURL" class="java.lang.String" scope="request" />
+<jsp:useBean id="${file_name}Filter" class="java.lang.String" scope="request" />
+
+<aui:nav-bar cssClass="collapse-basic-search" markupView="lexicon">
+
+	<aui:nav cssClass="navbar-nav">
+		<aui:nav-item label="<%= portletDisplay.getPortletDisplayName() %>" selected="<%= true %>" />
+	</aui:nav>
+
+#if (${filtermode}=="true")
+	<aui:nav-bar-search>
+		<aui:form name="${file_name}FilterForm" action="<%=${file_name}FilterURL %>" method="post">	
+			<liferay-ui:input-search markupView="lexicon" id="${file_name}Filter" name="${file_name}Filter" />
+		</aui:form>
+	</aui:nav-bar-search>
+
+#end
+</aui:nav-bar>

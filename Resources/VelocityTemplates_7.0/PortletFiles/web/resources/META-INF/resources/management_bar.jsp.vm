@@ -1,0 +1,37 @@
+
+#set( $createPath = "${webResourcesPath}/${snakeCaseEntityName}" )
+#set( $createName = "/management_bar.jsp" )
+
+<%@ include file="./init.jsp" %>
+
+<%
+PortletURL portletURL = ${classInstance}DisplayContext.getBasePortletURL();
+
+portletURL.setParameter("javax.portlet.action", "doView");
+%>
+
+<liferay-frontend:management-bar
+	includeCheckBox="<%= false %>"
+>
+	<liferay-frontend:management-bar-buttons>
+		<liferay-frontend:management-bar-display-buttons
+			displayViews="<%= ${classInstance}DisplayContext.getDisplayViews() %>"
+			portletURL="<%= portletURL %>"
+			selectedDisplayStyle="<%= ${classInstance}DisplayContext.getDisplayStyle() %>"
+		/>
+	</liferay-frontend:management-bar-buttons>
+
+	<liferay-frontend:management-bar-filters>
+		<liferay-frontend:management-bar-navigation
+			navigationKeys='<%= new String[] {"all"} %>'
+			portletURL="<%= portletURL %>"
+		/>
+
+		<liferay-frontend:management-bar-sort
+			orderByCol="<%= ${classInstance}DisplayContext.getOrderByCol() %>"
+			orderByType="<%= ${classInstance}DisplayContext.getOrderByType() %>"
+			orderColumns="<%= ${classInstance}DisplayContext.getOrderColumns() %>"
+			portletURL="<%= portletURL %>"
+		/>
+	</liferay-frontend:management-bar-filters>
+</liferay-frontend:management-bar>

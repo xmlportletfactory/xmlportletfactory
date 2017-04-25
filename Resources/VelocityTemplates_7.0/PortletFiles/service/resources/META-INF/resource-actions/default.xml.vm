@@ -1,0 +1,53 @@
+#set( $targetFile = "${serviceModulePath}/src/main/resources/META-INF/resource-actions/default.xml" )
+<?xml version="1.0"?>
+<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.0.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_0_0.dtd">
+<resource-action-mapping>
+#foreach($table in $applications)
+	<model-resource>
+		<model-name>${basePackage}.$helper.getEntityNamePlural($table)</model-name>
+		<portlet-ref>
+			<portlet-name>$helper.getPortletName($table)</portlet-name>
+		</portlet-ref>
+		<root>true</root>
+		<weight>1</weight>
+		<permissions>
+			<supports>
+				<action-key>ADD_$helper.getSnakeCaseEntityName($table).toUpperCase()</action-key>
+				<action-key>PERMISSIONS</action-key>
+			</supports>
+			<site-member-defaults/>
+			<guest-defaults/>
+			<guest-unsupported>
+				<action-key>ADD_$helper.getSnakeCaseEntityName($table)</action-key>
+				<action-key>PERMISSIONS</action-key>
+			</guest-unsupported>
+		</permissions>
+	</model-resource>
+	<model-resource>
+		<model-name>${basePackage}.model.$helper.getEntityName($table)</model-name>
+		<portlet-ref>
+			<portlet-name>$helper.getPortletName($table)</portlet-name>
+		</portlet-ref>
+		<weight>1</weight>
+		<permissions>
+			<supports>
+				<action-key>DELETE</action-key>
+				<action-key>PERMISSIONS</action-key>
+				<action-key>UPDATE</action-key>
+				<action-key>VIEW</action-key>
+			</supports>
+			<site-member-defaults>
+				<action-key>DELETE</action-key>
+				<action-key>UPDATE</action-key>
+				<action-key>VIEW</action-key>
+			</site-member-defaults>
+			<guest-defaults>
+				<action-key>VIEW</action-key>
+			</guest-defaults>
+			<guest-unsupported>
+				<action-key>PERMISSIONS</action-key>
+			</guest-unsupported>
+		</permissions>
+	</model-resource>
+#end
+</resource-action-mapping>

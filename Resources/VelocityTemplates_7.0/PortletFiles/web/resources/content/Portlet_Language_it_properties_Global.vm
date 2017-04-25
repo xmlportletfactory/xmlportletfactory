@@ -1,0 +1,51 @@
+
+#
+#  Portlet languague localization messages to be available portal wide
+#
+#  (Courtesy of Juan G. del Pino)
+#
+#set( $createPath = "${webModulePath}/src/main/resources/content-portal" )
+#set( $createName = "/Language_it.properties" )
+#if (($hasWorkflow || $generateActivity || $asset) ||
+	($hasWorkflow && $generateActivity && $asset) ||
+	($hasWorkflow && $generateActivity) ||
+	($asset && $generateActivity) ||
+	($hasWorkflow && $asset))
+#foreach($table in $applications)
+#set ($tableHasWorkflow=false)
+#if ($table.getClassDef().isSetWorkflow())
+#if ($table.getClassDef().getWorkflow() == "true")
+#set ($tableHasWorkflow=true)
+#end
+#end
+#set ($generateActivity=false)
+#if ($table.getClassDef().isSetGenerateActivity())
+#if ($table.getClassDef().getGenerateActivity() == "true")
+#set ($generateActivity=true)
+#end
+#end
+### Class: ${table.getClassDef().getName()} - ${table.getClassDef().getTitle()}
+### Table: ${table.getFileDef().getName()}
+#
+# Portlet ${table.getClassDef().getTitle()} Global messages
+#
+model.resource.${basePackage}.model.${table.getClassDef().getName()}=${table.getClassDef().getTitle()}
+model.resource.${basePackage}.model=${table.getClassDef().getTitle()}
+model.resource.${basePackage}.${table.getClassDef().getName()}=${table.getClassDef().getTitle()}
+#if ($generateActivity)
+#
+# Portlet ${table.getClassDef().getTitle()} Activity messages
+#
+activity-${table.getFileDef().getName().toLowerCase()}-added-record={0} ha aggiunto un nuovo Record alla Tabella ${table.getClassDef().getTitle()}.
+activity-${table.getFileDef().getName().toLowerCase()}-updated-record={0} ha modificato un Record nella Tabella ${table.getClassDef().getTitle()}.
+#if ($tableHasWorkflow)
+activity-${table.getFileDef().getName().toLowerCase()}-added-record-pending-approval={0} ha aggiunto un nuovo Record alla Tabella ${table.getClassDef().getTitle()} in attesa di Approvazione.
+#end
+#end
+#end
+#else
+#*
+     As there are no services defined, no file will be generated 
+*#
+#set ($createFile=false)
+#end

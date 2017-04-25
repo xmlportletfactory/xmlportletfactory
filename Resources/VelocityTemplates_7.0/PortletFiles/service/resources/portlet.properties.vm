@@ -1,0 +1,11 @@
+#set( $targetFile = "${serviceModulePath}/src/main/resources/portlet.properties" )
+include-and-override=portlet-ext.properties
+
+#
+# Input a list of comma delimited resource action configurations that will be
+# read from the class path.
+#
+resource.actions.configs=META-INF/resource-actions/default.xml
+
+## TODO ?
+##service.configurator.portlet.ids=com_liferay_bookmarks_web_portlet_BookmarksAdminPortlet,com_liferay_bookmarks_web_portlet_BookmarksPortlet

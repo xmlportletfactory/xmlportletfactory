@@ -1,0 +1,363 @@
+#set( $targetFile = "${webModuleBasePackagePath}/web/portlet/action/View${classDef_name}ListMVCRenderCommand.java")
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+package ${basePackage}.web.portlet.action;
+
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.Event;
+import javax.portlet.EventRequest;
+import javax.portlet.EventResponse;
+import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequestDispatcher;
+import javax.portlet.PortletURL;
+import javax.portlet.ProcessAction;
+import javax.portlet.ProcessEvent;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletConfig;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+import com.liferay.portal.kernel.dao.search.SearchContainer;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+
+import ${basePackage}.model.${classDef_name};
+import ${basePackage}.model.impl.${classDef_name}Impl;
+import ${basePackage}.service.${classDef_name}LocalServiceUtil;
+import ${basePackage}.service.permission.${classDef_name}Permission;
+import ${basePackage}.service.permission.${classDef_name}EntryPermission;
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+// needed for ${application.getClassDef().getName()} detail-file ${detailfile.getDetailFileClassName()}
+#foreach($detailapplication in $applications)
+#if (${detailapplication.getClassDef().getName()} == ${detailfile.getDetailFileClassName()})
+import ${basePackage}.service.${detailapplication.getClassDef().getName()}LocalServiceUtil;
+#end
+#end
+#end
+
+#set($masterName="")
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
+#set($masterName = ${tabledetail.getClassDef().getName()})
+import ${basePackage}.service.${masterName}LocalServiceUtil;
+import ${basePackage}.model.${masterName};
+#end
+#end
+#end
+
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($hasDocuments="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+import ${basePackage}.model.${validationTable.getClassDef().getName()};
+import ${basePackage}.service.${validationTable.getClassDef().getName()}LocalServiceUtil;
+#end
+#end
+#end
+#end
+import ${basePackage}.util.${classDef_name}Util;
+import ${basePackage}.web.${classDef_name}Comparator;
+
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchContextFactory;
+import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.PortalUtil;
+
+import org.apache.commons.beanutils.BeanComparator;
+
+@Component(
+	immediate = true,
+	property = {
+		"javax.portlet.name=${portletName}",
+		"mvc.command.name=/",
+		"mvc.command.name=/${snakeCaseEntitiesName}/view"
+	},
+	service = MVCRenderCommand.class
+)
+public class View${classDef_name}ListMVCRenderCommand implements MVCRenderCommand {
+
+	@Override
+	public String render(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws PortletException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay) renderRequest
+				.getAttribute(WebKeys.THEME_DISPLAY);
+
+		long groupId = themeDisplay.getScopeGroupId();
+
+		PermissionChecker permissionChecker = themeDisplay
+				.getPermissionChecker();
+
+##		TODO
+##
+##		boolean hasAddPermission = ${classDef_name}Permission.contains(permissionChecker, groupId, "ADD_$application.getClassDef().getName().toUpperCase()");
+##
+##		boolean hasModelPermissions = ${classDef_name}Permission.contains(permissionChecker, groupId, ActionKeys.PERMISSIONS);
+
+		boolean hasAddPermission = true;
+
+		boolean hasModelPermissions = true;
+
+		List<${classDef_name}> tempResults = Collections.EMPTY_LIST;
+
+		PortletPreferences prefs = renderRequest.getPreferences();
+
+		String ${fileDef_name}Filter = ParamUtil.getString(renderRequest, "${fileDef_name}Filter");
+
+		String rowsPerPage = prefs.getValue("rows-per-page","5");
+		String viewType = prefs.getValue("view-type", "0");
+
+		Integer cur = 1;
+		int containerStart = 0;
+		int containerEnd = 0;
+		String orderByType = renderRequest.getParameter("orderByType");
+		String orderByCol = renderRequest.getParameter("orderByCol");
+		try{
+			cur = ParamUtil.getInteger(renderRequest, "cur");
+
+		}catch (Exception e){
+			cur = 1;
+		}
+
+		if (cur < 1){
+			cur = 1;
+		}
+
+		if (Validator.isNotNull(${fileDef_name}Filter) || !${fileDef_name}Filter.equalsIgnoreCase("")) {
+			rowsPerPage = "100";
+			cur = 1;
+		}
+
+		containerStart = (cur - 1) * Integer.parseInt(rowsPerPage);
+		containerEnd = containerStart + Integer.parseInt(rowsPerPage);
+
+		int total = 0;
+#set ($hasDetail = "false")
+## TODO
+#*
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
+#set ($hasDetail = "true")
+#set ($conectionFieldName = $detailfile.getConnectionFieldName())
+		long ${detailfile.getConnectionFieldName()} = 0;
+		String ${detailfile.getConnectionFieldName()}Str = renderRequest.getPortletSession().getAttribute("${detailfile.getConnectionFieldName()}")+ "";
+
+		try {
+			${masterName} ${masterName.toLowerCase()} = ${masterName}LocalServiceUtil.fetch${masterName}(Long.parseLong(${detailfile.getConnectionFieldName()}Str));
+			if (!${detailfile.getConnectionFieldName()}Str.trim().equalsIgnoreCase("") && Validator.isNotNull(${masterName.toLowerCase()})){
+				${detailfile.getConnectionFieldName()} = Long.parseLong(${detailfile.getConnectionFieldName()}Str);
+			}
+		} catch (Exception e) {
+			${detailfile.getConnectionFieldName()} = 0;
+		}
+
+		try {
+			OrderByComparator comparator = ${classDef_name}Comparator.get${classDef_name}OrderByComparator(orderByCol,orderByType);
+			tempResults = ${classDef_name}LocalServiceUtil.findAllIn${detailfile.getConnectionFieldName()}Group(${detailfile.getConnectionFieldName()}, groupId,comparator);
+		} catch (Exception e) {
+			_log.error(e);
+		}
+        	if (${detailfile.getConnectionFieldName()} == 0) {
+            		hasAddPermission = false;
+        	} else {
+            		renderRequest.getPortletSession().setAttribute("${application.getFileDef().getName().toUpperCase()}${detailfile.getConnectionFieldName()}", ${detailfile.getConnectionFieldName()});
+        	}
+#end
+#end
+#end
+*#
+#if ($hasDetail == "false")
+		try {
+			PortalPreferences portalPrefs = PortletPreferencesFactoryUtil.getPortalPreferences(renderRequest);
+
+			if (Validator.isNull(orderByCol) && Validator.isNull(orderByType)) {
+				orderByCol = portalPrefs.getValue("${classDef_name}_order", "${classDef_name}-order-by-col", "${fieldNames.get(0)}");
+				orderByType = portalPrefs.getValue("${classDef_name}_order", "${classDef_name}-order-by-type", "asc");
+			}
+			OrderByComparator comparator = ${classDef_name}Comparator.get${classDef_name}OrderByComparator(orderByCol,orderByType);
+
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#set ($count=0)
+#foreach($field in $fields)
+#set($tipoCampo = ${field.getType().getDomNode().getChildNodes().item(1).getLocalName()})
+#if(${tipoCampo}=="varchar")
+#if (${field.getType().getVarchar().getFilter()} == "true")
+#set ($count=$count+1)
+#end
+#end
+#end
+#if ($count > 0)
+
+			if (${fileDef_name}Filter.equalsIgnoreCase("")) {
+#end
+
+				if (viewType.equals("0")){
+					tempResults = ${classDef_name}LocalServiceUtil.findAllInGroup(groupId, containerStart, containerEnd, comparator);
+					total = ${classDef_name}LocalServiceUtil.countAllInGroup(groupId);								
+				}else if (viewType.equals("1")){
+					tempResults = ${classDef_name}LocalServiceUtil.findAllInUser(themeDisplay.getUserId(), containerStart, containerEnd, comparator);
+					total = ${classDef_name}LocalServiceUtil.countAllInUser(themeDisplay.getUserId());
+				}else{
+					tempResults = ${classDef_name}LocalServiceUtil.findAllInUserAndGroup(themeDisplay.getUserId(), groupId, containerStart, containerEnd, comparator);
+					total = ${classDef_name}LocalServiceUtil.countAllInUserAndGroup(themeDisplay.getUserId(), groupId);
+				}
+
+#foreach($field in $fields)
+#if(${field.isSetValidation()})
+				if (orderByCol.equalsIgnoreCase("${field.getName()}")) {
+					BeanComparator ${field.getName()}_bc = new BeanComparator("${field.getName()}", ${classDef_name}Comparator.get${classDef_name}OrderByComparator(orderByCol,orderByType));
+					List newList = new ArrayList(tempResults);
+					Collections.sort(newList, ${field.getName()}_bc);
+					if (!orderByType.trim().equalsIgnoreCase("asc")) {
+						Collections.reverse(newList);
+					}
+					tempResults = Collections.unmodifiableList(newList);
+				}
+#end
+#end
+#if ($count > 0)
+			} else {
+
+				Indexer indexer = IndexerRegistryUtil.getIndexer(${classDef_name}.class);
+
+				SearchContext searchContext = SearchContextFactory.getInstance(PortalUtil.getHttpServletRequest(renderRequest));
+
+				searchContext.setEnd(containerEnd);
+				searchContext.setKeywords(${fileDef_name}Filter);
+				searchContext.setStart(containerStart);
+
+				Hits results = indexer.search(searchContext);
+
+				total = results.getLength();
+
+				if (total > 0) {
+					tempResults = new ArrayList<${classDef_name}>(total);
+				}
+				for (int i = 0; i < results.getDocs().length; i++) {
+					Document doc = results.doc(i);
+
+					${classDef_name} resReg = null;
+
+					// Entry
+					long entryId = GetterUtil.getLong(doc.get(Field.ENTRY_CLASS_PK));
+
+					try {
+						resReg = ${classDef_name}LocalServiceUtil.get${classDef_name}(entryId);
+
+						resReg = resReg.toEscapedModel();
+
+						tempResults.add(resReg);
+					}
+					catch (Exception e) {
+						if (_log.isWarnEnabled()) {
+							_log.warn("${classDef_name} search index is stale and contains entry " + entryId);
+						}
+
+						continue;
+					}
+				}
+			}
+#end
+
+		} catch (Exception e) {
+			_log.error(e);
+		}
+#end
+		renderRequest.setAttribute("highlightRowWithKey", renderRequest.getParameter("highlightRowWithKey"));
+		renderRequest.setAttribute("containerStart", containerStart);
+		renderRequest.setAttribute("containerEnd", containerEnd);
+		renderRequest.setAttribute("cur", cur);
+		renderRequest.setAttribute("tempResults", tempResults);
+		renderRequest.setAttribute("totalCount", total);
+		renderRequest.setAttribute("rowsPerPage", rowsPerPage);
+		renderRequest.setAttribute("hasAddPermission", hasAddPermission);
+		renderRequest.setAttribute("hasModelPermissions", hasModelPermissions);
+		renderRequest.setAttribute("orderByType", orderByType);
+		renderRequest.setAttribute("orderByCol", orderByCol);		
+		renderRequest.setAttribute("${fileDef_name}Filter", ${fileDef_name}Filter);
+
+		PortletURL add${application.getClassDef().getName()}URL = renderResponse.createRenderURL();
+		add${application.getClassDef().getName()}URL.setParameter("javax.portlet.action", "new${classDef_name}");
+		add${application.getClassDef().getName()}URL.setParameter("mvcRenderCommandName", "/${snakeCaseEntitiesName}/edit_${snakeCaseEntityName}");
+		renderRequest.setAttribute("add${application.getClassDef().getName()}URL", add${application.getClassDef().getName()}URL.toString());
+
+		PortletURL ${fileDef_name}FilterURL = renderResponse.createRenderURL();
+		${fileDef_name}FilterURL.setParameter("javax.portlet.action", "doView");
+		renderRequest.setAttribute("${fileDef_name}FilterURL", ${fileDef_name}FilterURL.toString());
+
+		return "/${snakeCaseEntitiesName}/view.jsp";
+	}
+	
+	private static Log _log = LogFactoryUtil.getLog(View${classDef_name}ListMVCRenderCommand.class);
+}

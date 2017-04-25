@@ -1,0 +1,456 @@
+#set( $targetFile = "${webModuleBasePackagePath}/web/${classDef_name}Portlet.java")
+#parse("/Resources/VelocityTemplates_common/PortletFiles/macro_GetSetFieldName.vm")
+
+
+package ${basePackage}.web;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
+import javax.portlet.Event;
+import javax.portlet.EventRequest;
+import javax.portlet.EventResponse;
+import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
+import javax.portlet.PortletRequestDispatcher;
+import javax.portlet.PortletURL;
+import javax.portlet.ProcessAction;
+import javax.portlet.ProcessEvent;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletConfig;
+import javax.xml.namespace.QName;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.portlet.PortletFileUpload;
+import org.apache.commons.beanutils.BeanComparator;
+import org.apache.poi.ss.usermodel.Workbook;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
+
+import com.liferay.portal.kernel.dao.search.SearchContainer;
+
+import ${basePackage}.model.${classDef_name};
+import ${basePackage}.model.impl.${classDef_name}Impl;
+import ${basePackage}.service.${classDef_name}LocalServiceUtil;
+import ${basePackage}.service.permission.${classDef_name}Permission;
+import ${basePackage}.service.permission.${classDef_name}EntryPermission;
+#foreach($detailfile in $application.getDetailFiles().getDetailFileArray())
+// needed for ${application.getClassDef().getName()} detail-file ${detailfile.getDetailFileClassName()}
+#foreach($detailapplication in $applications)
+#if (${detailapplication.getClassDef().getName()} == ${detailfile.getDetailFileClassName()})
+import ${basePackage}.service.${detailapplication.getClassDef().getName()}LocalServiceUtil;
+#end
+#end
+#end
+
+#set($masterName="")
+#foreach($tabledetail in $applications)
+#foreach($detailfile in $tabledetail.getDetailFiles().getDetailFileArray())
+#if ($application.getClassDef().getName() == $detailfile.getDetailFileClassName())
+#set($masterName = ${tabledetail.getClassDef().getName()})
+import ${basePackage}.service.${masterName}LocalServiceUtil;
+import ${basePackage}.model.${masterName};
+#end
+#end
+#end
+
+#set ($hasDocuments="false")
+#set ($fields = $application.getFileDef().getFields().getFieldArray())
+#foreach($field in $fields)
+#if(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="image")
+#set ($hasDocuments="true")
+#elseif(${field.getType().getDomNode().getChildNodes().item(1).getLocalName()}=="document")
+#set ($hasDocuments="true")
+#end
+#if(${field.isSetValidation()})
+#foreach($validationTable in $applications)
+#if(${validationTable.getClassDef().getName()}==${field.getValidation().getClassName()})
+import ${basePackage}.model.${validationTable.getClassDef().getName()};
+import ${basePackage}.service.${validationTable.getClassDef().getName()}LocalServiceUtil;
+#end
+#end
+#end
+#end
+import ${basePackage}.util.${classDef_name}Util;
+
+import com.liferay.portal.kernel.dao.orm.Criterion;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.search.SearchContextFactory;
+import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.PortalUtil;
+#if($hasDocuments == "true")
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
+import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
+#end
+
+
+#if ($hasTrash)
+import java.util.Map;
+import java.util.HashMap;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+#end
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+/**
+ * Portlet implementation class ${classDef_name}
+ */
+@Component(
+	immediate = true,
+	property = {
+		"com.liferay.portlet.css-class-wrapper=portlet-${normalizedProjectName}",
+		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.instanceable=false",
+		"com.liferay.portlet.preferences-owned-by-group=true",
+		"com.liferay.portlet.private-request-attributes=false",
+		"com.liferay.portlet.private-session-attributes=false",
+		"com.liferay.portlet.render-weight=50",
+		"com.liferay.portlet.scopeable=true",
+		"javax.portlet.display-name=${portletDisplayName}", 
+		"javax.portlet.expiration-cache=0",
+		"javax.portlet.init-param.portlet-title-based-navigation=true",
+		"javax.portlet.init-param.template-path=/",
+## TODO TO REMOVE ?			
+##		"javax.portlet.init-param.view-template=/${application.getFileDef().getName()}/view.jsp",
+		"javax.portlet.name=${portletName}",
+		"javax.portlet.resource-bundle=content.Language",
+		"javax.portlet.security-role-ref=power-user,user,administrator",
+		"javax.portlet.supports.mime-type=text/html"
+	},
+	service = {${classDef_name}Portlet.class, Portlet.class}
+)
+public class ${classDef_name}Portlet extends MVCPortlet {
+
+#if(${hasDocuments}=="true")
+	private ${classDef_name}Upload uploadManager;
+#end
+
+
+#*
+	private String dateToJsp(ActionRequest request, Date date) {
+		PortletPreferences prefs = request.getPreferences();
+		return dateToJsp(prefs, date);
+	}
+	private String dateToJsp(RenderRequest request, Date date) {
+		PortletPreferences prefs = request.getPreferences();
+		return dateToJsp(prefs, date);
+	}
+	private String dateToJsp(PortletPreferences prefs, Date date) {
+		SimpleDateFormat format = new SimpleDateFormat(prefs.getValue("date-format", "yyyy/MM/dd"));
+		String stringDate = format.format(date);
+		return stringDate;
+	}
+	private String dateTimeToJsp(Date date) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+		String stringDate = format.format(date);
+		return stringDate;
+	}
+*#
+	/* Portlet Actions */
+
+## TODO
+#*
+
+	public void serveResource(ResourceRequest resourceRequest, ResourceResponse resourceResponse) throws PortletException, IOException {
+		resourceResponse.setContentType("text/javascript");
+		String resourceId = resourceRequest.getResourceID();
+
+		if (Validator.isNotNull(resourceId) && resourceId.length() != 0) {
+#if($hasChainValidations == "true")
+#foreach($field in $fields)
+#if (${field.isSetValidation()})
+#if (${field.getValidation().isSetDepends()})
+			if (resourceId.equalsIgnoreCase("ajaxCallResourceURLFor${field.getValidation().getClassName()}")) {
+				long ${field.getValidation().getDepends().getAgainstFieldName()} = 0;
+				try {
+					${field.getValidation().getDepends().getAgainstFieldName()} = Long.parseLong(resourceRequest.getParameter("param_${field.getValidation().getDepends().getAgainstFieldName()}"));
+				} catch (NumberFormatException nfe) {
+					${field.getValidation().getDepends().getAgainstFieldName()} = 0;
+				}
+				JSONObject jsonObject = getChainValidationsBy$field.getValidation().getDepends().getAgainstFieldName().substring(0,1).toUpperCase()$field.getValidation().getDepends().getAgainstFieldName().substring(1)(${field.getValidation().getDepends().getAgainstFieldName()});
+				PrintWriter writer = resourceResponse.getWriter();
+				writer.write(jsonObject.toString());
+			}
+#end
+#end
+#end
+#end
+			if(resourceId.equalsIgnoreCase("exportFull${classDef_name}ResourceURL")) {
+
+		    		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
+		    		Locale locale = themeDisplay.getLocale();
+		    		PortletConfig portletConfig = (PortletConfig)resourceRequest.getAttribute(JavaConstants.JAVAX_PORTLET_CONFIG);
+
+		    		resourceResponse.setContentType("application/vnd.ms-excel");
+		    		resourceResponse.setProperty("expires","-1d");
+		    		resourceResponse.setProperty("Pragma","no-cache");
+		    		resourceResponse.setProperty("Cache-control","no-cache");
+				resourceResponse.addProperty(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\" ${classDef_name}\"");
+
+				try {
+					Workbook book = ${classDef_name}Exporter.generateFullExcel(themeDisplay.getScopeGroupId(), portletConfig, locale);
+					OutputStream out = resourceResponse.getPortletOutputStream();
+					book.write(out);
+					out.flush();
+					out.close();
+				} catch (SystemException e) {
+					e.printStackTrace();
+					throw new PortletException("Export Excel Error",e);
+				}
+			}
+
+		}
+	}
+
+*#
+
+#if($hasChainValidations == "true")
+#foreach($field in $fields)
+#if (${field.isSetValidation()})
+#if (${field.getValidation().isSetDepends()})
+	@SuppressWarnings("unchecked")
+	private JSONObject getChainValidationsBy$field.getValidation().getDepends().getAgainstFieldName().substring(0,1).toUpperCase()$field.getValidation().getDepends().getAgainstFieldName().substring(1)(long ${field.getValidation().getDepends().getAgainstFieldName()})
+	{
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+		JSONArray a = JSONFactoryUtil.createJSONArray();
+		List<${field.getValidation().getClassName()}> list${field.getValidation().getClassName()} = null;
+		try {
+			list${field.getValidation().getClassName()} = ${field.getValidation().getClassName()}LocalServiceUtil.findAllInChainValidationsBy$field.getValidation().getDepends().getAgainstFieldName().substring(0,1).toUpperCase()$field.getValidation().getDepends().getAgainstFieldName().substring(1)(${field.getValidation().getDepends().getAgainstFieldName()});
+		} catch (SystemException e) {
+			jsonObject.put("${field.getValidation().getClassName()}", a);
+			return jsonObject;
+		}
+
+		for(${field.getValidation().getClassName()} ${field.getValidation().getClassName().toLowerCase()}:list${field.getValidation().getClassName()}) {
+			JSONObject jo = JSONFactoryUtil.createJSONObject();
+			jo.put("${field.getValidation().getFieldName()}", ${field.getValidation().getClassName().toLowerCase()}.get${field.getValidation().getFieldName().substring(0,1).toUpperCase()}${field.getValidation().getFieldName().substring(1)}());
+			jo.put("${field.getValidation().getOrderByField()}", ${field.getValidation().getClassName().toLowerCase()}.get${field.getValidation().getOrderByField().substring(0,1).toUpperCase()}${field.getValidation().getOrderByField().substring(1)}());
+			a.put(jo);
+		}
+
+		jsonObject.put("${field.getValidation().getClassName()}", a);
+		return jsonObject;
+	}
+#end
+#end
+#end
+
+#end
+
+	private ${classDef_name} ${classDef_name}FromRequest(PortletRequest request) {
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+		${classDef_name}Impl ${classInstance} = new ${classDef_name}Impl();
+#set ($i =0)
+#set ($ii =0)
+#foreach ( $fname in $fieldNames )
+#set ( $i = $i + 1)
+#set ($arrayIter = ${i} - 1)
+#if (${i} > 0)
+#if(${fieldTypes.get(${arrayIter})}=="date")
+#if (${ii} == 0)
+#set ($ii = $ii + 1)
+	    	PortletPreferences prefs = request.getPreferences();
+        	SimpleDateFormat format = new SimpleDateFormat(prefs.getValue("date-format", "yyyy/MM/dd"));
+#end
+#if(${hasDocuments}=="true")
+        	int ${fname}Ano = Integer.valueOf((String) request.getAttribute("${fname}Year"));
+        	int ${fname}Mes = Integer.valueOf((String) request.getAttribute("${fname}Month"))+1;
+        	int ${fname}Dia = Integer.valueOf((String) request.getAttribute("${fname}Day"));
+#else
+        	int ${fname}Ano = ParamUtil.getInteger(request, "${fname}Year");
+        	int ${fname}Mes = ParamUtil.getInteger(request, "${fname}Month")+1;
+        	int ${fname}Dia = ParamUtil.getInteger(request, "${fname}Day");
+#end
+        	try {
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+            		${classInstance}.set#GetSetFieldName($i)(formatter.parse(${fname}Ano + "/" + ${fname}Mes + "/" + ${fname}Dia));
+       	 	} catch (ParseException e) {
+			${classInstance}.set#GetSetFieldName($i)(new Date());
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="datetime")
+#if (${ii} == 0)
+#set ($ii = $ii + 1)
+        	PortletPreferences prefs = request.getPreferences();
+        	SimpleDateFormat formatDateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+#end
+#if(${hasDocuments}=="true")
+        	int ${fname}Ano    = Integer.valueOf((String) request.getAttribute("${fname}Year"));
+        	int ${fname}Mes    = Integer.valueOf((String) request.getAttribute("${fname}Month"))+1;
+        	int ${fname}Dia    = Integer.valueOf((String) request.getAttribute("${fname}Day"));
+        	int ${fname}Hora   = Integer.valueOf((String) request.getAttribute("${fname}Hour"));
+        	int ${fname}Minuto = Integer.valueOf((String) request.getAttribute("${fname}Minute"));
+		int ${fname}AmPm   = Integer.valueOf((String) request.getAttribute("${fname}AmPm"));
+		
+		if (${fname}AmPm == Calendar.PM) {
+			${fname}Hora += 12;
+		}
+
+#else
+        	int ${fname}Ano    = ParamUtil.getInteger(request, "${fname}Year");
+        	int ${fname}Mes    = ParamUtil.getInteger(request, "${fname}Month")+1;
+        	int ${fname}Dia    = ParamUtil.getInteger(request, "${fname}Day");
+        	int ${fname}Hora   = ParamUtil.getInteger(request, "${fname}Hour");
+        	int ${fname}Minuto = ParamUtil.getInteger(request, "${fname}Minute");
+		int ${fname}AmPm   = ParamUtil.getInteger(request, "${fname}AmPm");
+
+		if (${fname}AmPm == Calendar.PM) {
+			${fname}Hora += 12;
+		}
+#end
+        	try {
+			SimpleDateFormat formatterDateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+            		${classInstance}.set#GetSetFieldName($i)(formatterDateTime.parse(${fname}Ano + "/" + ${fname}Mes + "/" + ${fname}Dia + " " + ${fname}Hora + ":" + ${fname}Minuto));
+        	} catch (ParseException e) {
+			${classInstance}.set#GetSetFieldName($i)(new Date());
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="string" || ${fieldTypes.get(${arrayIter})}=="varchar" || ${fieldTypes.get(${arrayIter})}=="text" || ${fieldTypes.get(${arrayIter})}=="richtext" || ${fieldTypes.get(${arrayIter})}=="documentlibrary")
+#if(${hasDocuments}=="true")
+		${classInstance}.set#GetSetFieldName($i)(request.getAttribute("${fname}").toString());
+#else
+		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getString(request, "${fname}"));
+#end
+#end
+#if(${fieldTypes.get(${arrayIter})}=="int")
+        	try {
+#if(${hasDocuments}=="true")
+		 	${classInstance}.set#GetSetFieldName($i)(Integer.valueOf(request.getAttribute("${fname}").toString()));
+#else
+              		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getInteger(request, "${fname}"));
+#end
+        	} catch (Exception nfe) {
+			//Controled en Validator
+            		${classInstance}.set#GetSetFieldName($i)(0);
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="long" || ${fieldTypes.get(${arrayIter})}=="numeric")
+        	try {
+#if(${hasDocuments}=="true")
+		    	${classInstance}.set#GetSetFieldName($i)(Long.valueOf(request.getAttribute("${fname}").toString()));
+#else
+            		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getLong(request, "${fname}"));
+#end
+        	} catch (Exception nfe) {
+		    //Controled en Validator
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="boolean" || ${fieldTypes.get(${arrayIter})}=="enum")
+#if(${hasDocuments}=="true")
+        	if (request.getAttribute("${fname}").toString().equalsIgnoreCase("false")) {
+        		${classInstance}.set#GetSetFieldName($i)(false);
+        	} else  {
+        		${classInstance}.set#GetSetFieldName($i)(true);
+        	}
+#else
+        	${classInstance}.set#GetSetFieldName($i)(ParamUtil.getBoolean(request, "${fname}"));
+#end
+#end
+#if(${fieldTypes.get(${arrayIter})}=="float" || ${fieldTypes.get(${arrayIter})}=="double")
+        	try {
+#if(${hasDocuments}=="true")
+		     	${classInstance}.set#GetSetFieldName($i)(Double.valueOf(request.getAttribute("${fname}").toString()));
+#else
+	         	${classInstance}.set#GetSetFieldName($i)(ParamUtil.getDouble(request, "${fname}"));
+#end
+        	} catch (NumberFormatException nfe) {
+			//Controled en Validator
+        	}
+#end
+#end
+#end
+		try {
+#if(${hasDocuments}=="true")
+			${classInstance}.setPrimaryKey(Long.valueOf(request.getAttribute("resourcePrimKey").toString()));
+#else
+		    	${classInstance}.setPrimaryKey(ParamUtil.getLong(request,"resourcePrimKey"));
+#end
+		} catch (NumberFormatException nfe) {
+			//Controled en Validator
+        	}
+#if ($asset)
+#if (!$assetTitleExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(request.getAttribute("${assetTitleField}").toString());
+#else
+		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(ParamUtil.getString(request, "${assetTitleField}"));
+#end
+#end
+#if (!$assetSummaryExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(request.getAttribute("${assetSummaryField}").toString());
+#else
+		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(ParamUtil.getString(request, "${assetSummaryField}"));
+#end
+#end
+#end		
+
+		${classInstance}.setCompanyId(themeDisplay.getCompanyId());
+		${classInstance}.setGroupId(themeDisplay.getScopeGroupId());
+		${classInstance}.setUserId(themeDisplay.getUserId());
+		return ${classInstance};
+	}
+
+	private static Log _log = LogFactoryUtil.getLog(${classDef_name}Portlet.class);
+
+}

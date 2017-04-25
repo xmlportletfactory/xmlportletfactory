@@ -1,0 +1,154 @@
+	private ${classDef_name} ${classDef_name}FromRequest(PortletRequest request) {
+		ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+		${classDef_name}Impl ${classInstance} = new ${classDef_name}Impl();
+#set ($i =0)
+#set ($ii =0)
+#foreach ( $fname in $fieldNames )
+#set ( $i = $i + 1)
+#set ($arrayIter = ${i} - 1)
+#if (${i} > 0)
+#if(${fieldTypes.get(${arrayIter})}=="date")
+#if (${ii} == 0)
+#set ($ii = $ii + 1)
+	    	PortletPreferences prefs = request.getPreferences();
+        	SimpleDateFormat format = new SimpleDateFormat(prefs.getValue("date-format", "yyyy/MM/dd"));
+#end
+#if(${hasDocuments}=="true")
+        	int ${fname}Ano = Integer.valueOf((String) request.getAttribute("${fname}Year"));
+        	int ${fname}Mes = Integer.valueOf((String) request.getAttribute("${fname}Month"))+1;
+        	int ${fname}Dia = Integer.valueOf((String) request.getAttribute("${fname}Day"));
+#else
+        	int ${fname}Ano = ParamUtil.getInteger(request, "${fname}Year");
+        	int ${fname}Mes = ParamUtil.getInteger(request, "${fname}Month")+1;
+        	int ${fname}Dia = ParamUtil.getInteger(request, "${fname}Day");
+#end
+        	try {
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+            		${classInstance}.set#GetSetFieldName($i)(formatter.parse(${fname}Ano + "/" + ${fname}Mes + "/" + ${fname}Dia));
+       	 	} catch (ParseException e) {
+			${classInstance}.set#GetSetFieldName($i)(new Date());
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="datetime")
+#if (${ii} == 0)
+#set ($ii = $ii + 1)
+        	PortletPreferences prefs = request.getPreferences();
+        	SimpleDateFormat formatDateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+#end
+#if(${hasDocuments}=="true")
+        	int ${fname}Ano    = Integer.valueOf((String) request.getAttribute("${fname}Year"));
+        	int ${fname}Mes    = Integer.valueOf((String) request.getAttribute("${fname}Month"))+1;
+        	int ${fname}Dia    = Integer.valueOf((String) request.getAttribute("${fname}Day"));
+        	int ${fname}Hora   = Integer.valueOf((String) request.getAttribute("${fname}Hour"));
+        	int ${fname}Minuto = Integer.valueOf((String) request.getAttribute("${fname}Minute"));
+		int ${fname}AmPm   = Integer.valueOf((String) request.getAttribute("${fname}AmPm"));
+		
+		if (${fname}AmPm == Calendar.PM) {
+			${fname}Hora += 12;
+		}
+
+#else
+        	int ${fname}Ano    = ParamUtil.getInteger(request, "${fname}Year");
+        	int ${fname}Mes    = ParamUtil.getInteger(request, "${fname}Month")+1;
+        	int ${fname}Dia    = ParamUtil.getInteger(request, "${fname}Day");
+        	int ${fname}Hora   = ParamUtil.getInteger(request, "${fname}Hour");
+        	int ${fname}Minuto = ParamUtil.getInteger(request, "${fname}Minute");
+		int ${fname}AmPm   = ParamUtil.getInteger(request, "${fname}AmPm");
+
+		if (${fname}AmPm == Calendar.PM) {
+			${fname}Hora += 12;
+		}
+#end
+        	try {
+			SimpleDateFormat formatterDateTime = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+            		${classInstance}.set#GetSetFieldName($i)(formatterDateTime.parse(${fname}Ano + "/" + ${fname}Mes + "/" + ${fname}Dia + " " + ${fname}Hora + ":" + ${fname}Minuto));
+        	} catch (ParseException e) {
+			${classInstance}.set#GetSetFieldName($i)(new Date());
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="string" || ${fieldTypes.get(${arrayIter})}=="varchar" || ${fieldTypes.get(${arrayIter})}=="text" || ${fieldTypes.get(${arrayIter})}=="richtext" || ${fieldTypes.get(${arrayIter})}=="documentlibrary")
+#if(${hasDocuments}=="true")
+		${classInstance}.set#GetSetFieldName($i)(request.getAttribute("${fname}").toString());
+#else
+		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getString(request, "${fname}"));
+#end
+#end
+#if(${fieldTypes.get(${arrayIter})}=="int")
+        	try {
+#if(${hasDocuments}=="true")
+		 	${classInstance}.set#GetSetFieldName($i)(Integer.valueOf(request.getAttribute("${fname}").toString()));
+#else
+              		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getInteger(request, "${fname}"));
+#end
+        	} catch (Exception nfe) {
+			//Controled en Validator
+            		${classInstance}.set#GetSetFieldName($i)(0);
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="long" || ${fieldTypes.get(${arrayIter})}=="numeric")
+        	try {
+#if(${hasDocuments}=="true")
+		    	${classInstance}.set#GetSetFieldName($i)(Long.valueOf(request.getAttribute("${fname}").toString()));
+#else
+            		${classInstance}.set#GetSetFieldName($i)(ParamUtil.getLong(request, "${fname}"));
+#end
+        	} catch (Exception nfe) {
+		    //Controled en Validator
+        	}
+#end
+#if(${fieldTypes.get(${arrayIter})}=="boolean" || ${fieldTypes.get(${arrayIter})}=="enum")
+#if(${hasDocuments}=="true")
+        	if (request.getAttribute("${fname}").toString().equalsIgnoreCase("false")) {
+        		${classInstance}.set#GetSetFieldName($i)(false);
+        	} else  {
+        		${classInstance}.set#GetSetFieldName($i)(true);
+        	}
+#else
+        	${classInstance}.set#GetSetFieldName($i)(ParamUtil.getBoolean(request, "${fname}"));
+#end
+#end
+#if(${fieldTypes.get(${arrayIter})}=="float" || ${fieldTypes.get(${arrayIter})}=="double")
+        	try {
+#if(${hasDocuments}=="true")
+		     	${classInstance}.set#GetSetFieldName($i)(Double.valueOf(request.getAttribute("${fname}").toString()));
+#else
+	         	${classInstance}.set#GetSetFieldName($i)(ParamUtil.getDouble(request, "${fname}"));
+#end
+        	} catch (NumberFormatException nfe) {
+			//Controled en Validator
+        	}
+#end
+#end
+#end
+		try {
+#if(${hasDocuments}=="true")
+			${classInstance}.setPrimaryKey(Long.valueOf(request.getAttribute("resourcePrimKey").toString()));
+#else
+		    	${classInstance}.setPrimaryKey(ParamUtil.getLong(request,"resourcePrimKey"));
+#end
+		} catch (NumberFormatException nfe) {
+			//Controled en Validator
+        	}
+#if ($asset)
+#if (!$assetTitleExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(request.getAttribute("${assetTitleField}").toString());
+#else
+		${classInstance}.set${assetTitleField.substring(0,1).toUpperCase()}${assetTitleField.substring(1)}(ParamUtil.getString(request, "${assetTitleField}"));
+#end
+#end
+#if (!$assetSummaryExist)
+#if(${hasDocuments}=="true")
+		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(request.getAttribute("${assetSummaryField}").toString());
+#else
+		${classInstance}.set${assetSummaryField.substring(0,1).toUpperCase()}${assetSummaryField.substring(1)}(ParamUtil.getString(request, "${assetSummaryField}"));
+#end
+#end
+#end		
+
+		${classInstance}.setCompanyId(themeDisplay.getCompanyId());
+		${classInstance}.setGroupId(themeDisplay.getScopeGroupId());
+		${classInstance}.setUserId(themeDisplay.getUserId());
+		return ${classInstance};
+	}
+

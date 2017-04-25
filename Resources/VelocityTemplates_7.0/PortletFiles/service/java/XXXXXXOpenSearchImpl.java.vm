@@ -1,0 +1,36 @@
+
+#set( $createPath = "${serviceModuleBasePackagePath}/util" )
+#set( $createName = "/${classDef_name}OpenSearchImpl.java" )
+
+package ${basePackage}.util;
+
+import com.liferay.portal.kernel.search.HitsOpenSearchImpl;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import ${basePackage}.model.${classDef_name};
+
+/**
+ * @author Juan G.
+ */
+public class ${classDef_name}OpenSearchImpl extends HitsOpenSearchImpl {
+
+	public static final String SEARCH_PATH = "/c/${classDef_name}/open_search";
+
+	public static final String TITLE = "${classDef_name} Search: ";
+
+	@Override
+	public Indexer getIndexer() {
+		return IndexerRegistryUtil.getIndexer(${classDef_name}.class);
+	}
+
+	@Override
+	public String getSearchPath() {
+		return SEARCH_PATH;
+	}
+
+	@Override
+	public String getTitle(String keywords) {
+		return TITLE + keywords;
+	}
+
+}
